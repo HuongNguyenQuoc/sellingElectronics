@@ -7,19 +7,13 @@ const { createProduct,
         deleteProduct
  } = require('../controllers/productController');
 
-// Route to create a new product
-router.post('/', createProduct);
+router.route('/')
+    .get(getProducts)
+    .post(createProduct);
 
-// Route to get all products
-router.get('/', getProducts);
-
-// Route to get a single product by ID
-router.get('/:id', getProductById);
-
-// Route to update a product
-router.put('/:id', updateProduct);
-
-// Route to delete a product
-router.delete('/:id', deleteProduct);
+router.route('/:id')
+    .get(getProductById)
+    .put(updateProduct)
+    .delete(deleteProduct);
 
 module.exports = router;
