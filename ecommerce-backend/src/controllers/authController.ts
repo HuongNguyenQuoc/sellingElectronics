@@ -1,13 +1,15 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const asyncHandler = require('../middlewares/asyncHandler');
+import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import User from '../models/User';
+import asyncHandler from '../middlewares/asyncHandler';
 
 /**
  * Generate JWT token
  * @param {string | import('mongoose').Types.ObjectId} id
  * @returns {string}
  */
-const generateToken = (id) => {
+const generateToken = (id: string | mongoose.Types.ObjectId): string => { //id can be is types "ObjectId", example: "_id": ObjectId("234237462jdfjs7324bvch")
   if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not defined in .env");
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' }); // Generate a JWT token with the user's ID as payload, using a secret key
   // so that each time the user logs in, they just need to provide this token and then the server will verify the token to authenticate
@@ -17,7 +19,7 @@ const generateToken = (id) => {
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
-const registerUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
 
   // Check if the user already exists
@@ -37,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id) // Generate a token for the newly registered user
+      token: generateToken(user._id as mongoose.Types.ObjectId) // Generate a token for the newly registered user
     });
   }
 });
@@ -46,7 +48,7 @@ const registerUser = asyncHandler(async (req, res) => {
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  */
-const loginUser = asyncHandler(async (req, res) => {
+const loginUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   // 1. Find the user by email

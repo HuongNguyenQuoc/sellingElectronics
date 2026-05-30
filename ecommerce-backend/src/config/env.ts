@@ -7,4 +7,4 @@ Object.entries(ENV).forEach(([key, value]) => {
   if (!value) throw new Error(`Missing env variable: ${key}`);
 })
 
-module.exports = { ENV };
+export default ENV;
