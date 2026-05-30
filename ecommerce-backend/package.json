@@ -20,6 +20,10 @@
     "mongoose": "^9.6.2"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^25.9.1",
     "nodemon": "^3.1.14",
     "typescript": "^6.0.3"
   }
