@@ -6,17 +6,19 @@ const Accessories = () => {
   // 1. Khởi tạo state để lưu trạng thái bộ lọc
   const [activeFilter, setActiveFilter] = useState("ALL");
 
-  // 2. Logic lọc sản phẩm
+  // 2. Logic lọc sản phẩm (ĐÃ SỬA: brand thành brandName)
   const filteredAccessories =
     activeFilter === "ALL"
       ? dummyAccessories
       : dummyAccessories.filter((item) => {
-          // Xử lý riêng cho nút "Chuột & Phím" vì nó gom 2 brand lại
+          // Xử lý riêng cho nút "Chuột & Phím" vì nó gom 2 brandName lại
           if (activeFilter === "CHUỘT & PHÍM") {
-            return item.brand === "CHUỘT GAMING" || item.brand === "BÀN PHÍM";
+            return (
+              item.brandName === "CHUỘT GAMING" || item.brandName === "BÀN PHÍM"
+            );
           }
-          // Các nút khác thì lọc khớp chính xác tên brand
-          return item.brand === activeFilter;
+          // Các nút khác thì lọc khớp chính xác tên brandName
+          return item.brandName === activeFilter;
         });
 
   // 3. Hàm đổi màu nút bấm

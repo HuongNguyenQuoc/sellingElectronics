@@ -5,10 +5,11 @@ import { dummyPhones } from "../data/mockData";
 const FeaturedPhones = () => {
   const [activeFilter, setActiveFilter] = useState("ALL");
 
+  // ĐÃ SỬA: Đổi phone.brand thành phone.brandName để khớp với dữ liệu mới
   const filteredPhones =
     activeFilter === "ALL"
       ? dummyPhones
-      : dummyPhones.filter((phone) => phone.brand === activeFilter);
+      : dummyPhones.filter((phone) => phone.brandName === activeFilter);
 
   const getButtonClass = (filterName) => {
     return activeFilter === filterName
