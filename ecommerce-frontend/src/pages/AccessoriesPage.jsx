@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { dummyAll } from "../data/mockData";
 
 const AccessoriesPage = () => {
@@ -57,6 +58,12 @@ const AccessoriesPage = () => {
   }, [allAccessories, selectedBrands, selectedPrices, sortOrder]);
 
   const formatPrice = (price) => new Intl.NumberFormat("vi-VN").format(price) + "đ";
+
+  // Hàm tính giá cũ như các trang khác
+  const getOriginalPrice = (price, discountPercentage) => {
+    if (!discountPercentage) return price;
+    return price / (1 - discountPercentage / 100);
+  };
 
   return (
     <div className="flex flex-col">
@@ -121,17 +128,69 @@ const AccessoriesPage = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {filteredAccessories.map((item) => (
-              <div key={item.id} className="bg-white rounded-[20px] p-4 shadow-sm border border-gray-200 hover:shadow-lg transition-all relative flex flex-col group cursor-pointer">
+              <Link 
+                to={`/product/${item.id}`}
+                key={item.id} 
+                className="bg-white rounded-[20px] p-4 shadow-sm border border-gray-200 hover:shadow-lg transition-all relative flex flex-col group cursor-pointer block"
+              >
+                {/* Badge % Giảm giá */}
+                {item.discountPercentage > 0 && (
+                  <div className="absolute top-0 right-0 bg-[#e30019] text-white text-[13px] font-bold px-3 py-1.5 rounded-bl-[16px] rounded-tr-[19px] z-10">
+                    -{item.discountPercentage}%
+                  </div>
+                )}
+
                 <div className="w-full aspect-square overflow-hidden flex items-center justify-center pt-2">
                   <img src={item.thumbnail} alt={item.title} className="object-contain w-[85%] h-[85%] group-hover:scale-105 transition-transform" />
                 </div>
+                
                 <div className="mt-4 flex flex-col flex-grow text-left">
-                  <span className="text-[12px] font-bold text-[#8f9bb3] uppercase">{item.brandName}</span>
+                  <span className="text-[12px] font-bold text-[#8f9bb3] uppercase tracking-wide">{item.brandName}</span>
                   <h3 className="text-[15px] font-semibold text-[#002f4b] mt-1 line-clamp-2 min-h-[44px]">{item.title}</h3>
-                  <span className="text-[20px] font-bold text-[#e30019] mt-3">{formatPrice(item.price)}</span>
-                  <button className="w-full mt-4 bg-[#ffc107] hover:bg-[#e0a800] text-[#002f4b] font-bold py-2.5 rounded-lg transition-colors">MUA NGAY</button>
+                  
+                  {/* Đánh giá sao động */}
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <div className="flex">
+                      {[...Array(5)].map((_, index) => {
+                        const fillPercent = Math.min(Math.max((item.rating || 0) - index, 0), 1) * 100;
+                        return (
+                          <div key={index} className="relative w-3.5 h-3.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="absolute top-0 left-0 w-3.5 h-3.5 text-gray-200">
+                              <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                            </svg>
+                            <div className="absolute top-0 left-0 overflow-hidden h-full" style={{ width: `${fillPercent}%` }}>
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-[#ffc107]">
+                                <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <span className="text-[13px] text-[#8f9bb3]">
+                      ({item.reviews?.length || 0})
+                    </span>
+                  </div>
+
+                  {/* Giá tiền và Giá gốc */}
+                  <div className="mt-3 mb-4 flex flex-col">
+                    {item.discountPercentage > 0 ? (
+                      <span className="text-[13px] text-[#8f9bb3] line-through font-medium">
+                        {formatPrice(getOriginalPrice(item.price, item.discountPercentage))}
+                      </span>
+                    ) : (
+                      <span className="h-[20px]"></span>
+                    )}
+                    <span className="text-[20px] font-bold text-[#e30019]">
+                      {formatPrice(item.price)}
+                    </span>
+                  </div>
+
+                  <button className="w-full mt-auto bg-[#ffc107] hover:bg-[#e0a800] text-[#002f4b] text-[15px] font-bold py-2.5 rounded-lg transition-colors">
+                    MUA NGAY
+                  </button>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </main>

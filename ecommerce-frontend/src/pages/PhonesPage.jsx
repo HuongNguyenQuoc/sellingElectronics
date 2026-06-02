@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom"; // Nhập Link từ react-router-dom
 import { dummyAll } from "../data/mockData";
 
 const PhonesPage = () => {
@@ -15,7 +16,6 @@ const PhonesPage = () => {
   const [selectedPrices, setSelectedPrices] = useState([]);
   const [sortOrder, setSortOrder] = useState("asc");
 
-  // ĐÃ CẬP NHẬT LẠI CÁC MỐC GIÁ THEO YÊU CẦU
   const priceRanges = [
     { id: "under10", label: "Dưới 10 triệu", min: 0, max: 10000000 },
     { id: "10to20", label: "Từ 10 - 20 triệu", min: 10000000, max: 20000000 },
@@ -169,9 +169,10 @@ const PhonesPage = () => {
           {filteredPhones.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredPhones.map((phone) => (
-                <div 
+                <Link 
+                  to={`/product/${phone.id}`} 
                   key={phone.id} 
-                  className="bg-white rounded-[20px] p-4 shadow-sm border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative flex flex-col group cursor-pointer"
+                  className="bg-white rounded-[20px] p-4 shadow-sm border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative flex flex-col group cursor-pointer block"
                 >
                   
                   {/* Badge % Giảm giá */}
@@ -200,13 +201,29 @@ const PhonesPage = () => {
                       {phone.title}
                     </h3>
                     
+                    {/* Đánh giá sao - ĐÃ ÁP DỤNG LOGIC ĐỔ ĐẦY THEO PHẦN TRĂM */}
                     <div className="flex items-center gap-1.5 mt-2">
-                      <div className="flex text-[#ffc107]">
-                        {[...Array(5)].map((_, i) => (
-                          <svg key={i} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                            <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
-                          </svg>
-                        ))}
+                      <div className="flex">
+                        {[...Array(5)].map((_, index) => {
+                          const fillPercent = Math.min(Math.max((phone.rating || 0) - index, 0), 1) * 100;
+                          return (
+                            <div key={index} className="relative w-3.5 h-3.5">
+                              {/* Ngôi sao nền màu xám */}
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="absolute top-0 left-0 w-3.5 h-3.5 text-gray-200">
+                                <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                              </svg>
+                              {/* Lớp phủ ngôi sao màu vàng */}
+                              <div 
+                                className="absolute top-0 left-0 overflow-hidden h-full" 
+                                style={{ width: `${fillPercent}%` }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-[#ffc107]">
+                                  <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                       <span className="text-[13px] text-[#8f9bb3]">
                         ({phone.reviews?.length || 0})
@@ -232,7 +249,7 @@ const PhonesPage = () => {
                     </button>
                   </div>
 
-                </div>
+                </Link>
               ))}
             </div>
           ) : (

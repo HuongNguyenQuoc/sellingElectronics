@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom"; // 1. IMPORT THÊM LINK TẠI ĐÂY
 import ProductCard from "./ProductCard";
 import { dummyAccessories } from "../data/mockData";
 
@@ -68,7 +69,14 @@ const Accessories = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {filteredAccessories.length > 0 ? (
           filteredAccessories.map((item) => (
-            <ProductCard key={item.id} product={item} />
+            /* 2. BỌC LINK RA BÊN NGOÀI PRODUCT CARD */
+            <Link 
+              to={`/product/${item.id}`} 
+              key={item.id} 
+              className="block" // Thêm block để vùng bấm bao trọn thẻ
+            >
+              <ProductCard product={item} />
+            </Link>
           ))
         ) : (
           <div className="col-span-full py-8 text-center text-gray-500">

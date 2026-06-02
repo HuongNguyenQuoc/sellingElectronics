@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"; // 1. IMPORT THÊM LINK TẠI ĐÂY
 import ProductCard from "./ProductCard";
 import { dummyLaptops } from "../data/mockData";
 
@@ -18,7 +19,14 @@ const FeaturedLaptops = () => {
         {/* Khối danh sách sản phẩm (Chiếm 4 cột) */}
         <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
           {dummyLaptops.map((item) => (
-            <ProductCard key={item.id} product={item} />
+            /* 2. BỌC LINK RA BÊN NGOÀI PRODUCT CARD */
+            <Link 
+              to={`/product/${item.id}`} 
+              key={item.id} 
+              className="block" // Thêm block để vùng bấm bao trọn thẻ
+            >
+              <ProductCard product={item} />
+            </Link>
           ))}
         </div>
 

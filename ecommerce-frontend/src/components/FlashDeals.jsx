@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom"; // 1. IMPORT THÊM LINK TẠI ĐÂY
 import ProductCard from "./ProductCard";
 import { dummyFlashDeals } from "../data/mockData";
 
@@ -46,7 +47,7 @@ const FlashDeals = () => {
               Flash Deals Chớp Nhoáng
             </h2>
 
-            {/* Bộ đếm ngược thời gian (Đã gắn biến động) */}
+            {/* Bộ đếm ngược thời gian */}
             <div className="flex items-center gap-3 text-sm">
               <span className="text-gray-500 font-bold uppercase text-xs">
                 Hết hạn sau:
@@ -78,7 +79,14 @@ const FlashDeals = () => {
         {/* Lưới danh sách 6 sản phẩm */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {dummyFlashDeals.map((item) => (
-            <ProductCard key={item.id} product={item} />
+            /* 2. BỌC LINK RA BÊN NGOÀI PRODUCT CARD */
+            <Link 
+              to={`/product/${item.id}`} 
+              key={item.id} 
+              className="block" // Thêm block để thẻ Link bọc kín toàn bộ thẻ ProductCard bên trong
+            >
+              <ProductCard product={item} />
+            </Link>
           ))}
         </div>
       </div>
