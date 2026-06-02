@@ -1,4 +1,4 @@
-// File: src/data/mockData.js
+
 
 export const dummyFlashDeals = [
   {
@@ -730,4 +730,11 @@ export const dummyRecommended = [
     thumbnail:
       "https://tse2.mm.bing.net/th/id/OIP.R_y9TcziJvqtOv506U3eSAHaHa?pid=Api&h=220&P=0",
   },
+];
+export const dummyAll = [
+  ...dummyFlashDeals,
+  ...dummyPhones,
+  ...dummyLaptops,
+  ...dummyAccessories,
+  ...dummyRecommended
 ];
