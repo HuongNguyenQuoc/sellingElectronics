@@ -18,10 +18,10 @@ export const dummyFlashDeals = [
     warrantyInformation: "Bảo hành chính hãng 12 tháng",
     reviews: [],
     images: [
-      "https://cdn.tgdd.vn/Products/Images/42/305658/iphone-15-pro-max-blue-thumbnew-600x600.jpg",
+      "https://tse3.mm.bing.net/th/id/OIP.J-fPKJ-EHsOh7Gz25PQ0kwHaHa?pid=Api&h=220&P=0",
     ],
     thumbnail:
-      "https://cdn.tgdd.vn/Products/Images/42/305658/iphone-15-pro-max-blue-thumbnew-600x600.jpg",
+      "https://tse3.mm.bing.net/th/id/OIP.J-fPKJ-EHsOh7Gz25PQ0kwHaHa?pid=Api&h=220&P=0",
   },
   {
     id: "2",

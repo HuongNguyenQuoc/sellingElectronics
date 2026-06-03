@@ -1,23 +1,45 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // 1. IMPORT THÊM LINK TẠI ĐÂY
+import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import { dummyFlashDeals } from "../data/mockData";
 
 const FlashDeals = () => {
-  const [timeLeft, setTimeLeft] = useState(10800);
+  const [timeLeft, setTimeLeft] = useState(0);
 
+  // LOGIC ĐỒNG BỘ THỜI GIAN VỚI TRANG FLASH SALE CHI TIẾT
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime > 0) {
-          return prevTime - 1;
-        } else {
-          return 10800;
-        }
-      });
+    const initTimer = () => {
+      const storedEndTime = localStorage.getItem("flashSaleEndTime");
+      const now = Date.now();
+      
+      // Nếu đã có mốc kết thúc và chưa qua thời gian đó
+      if (storedEndTime && parseInt(storedEndTime) > now) {
+        return parseInt(storedEndTime);
+      }
+      
+      // Nếu chưa có hoặc đã hết giờ -> Đặt lại mốc 3 tiếng mới
+      const newEndTime = now + 3 * 60 * 60 * 1000;
+      localStorage.setItem("flashSaleEndTime", newEndTime);
+      return newEndTime;
+    };
+
+    let endTime = initTimer();
+
+    const timerInterval = setInterval(() => {
+      const now = Date.now();
+      let remaining = Math.floor((endTime - now) / 1000);
+
+      // Nếu đếm lùi về 0 thì tự động quay vòng lại 3 tiếng
+      if (remaining <= 0) {
+        endTime = now + 3 * 60 * 60 * 1000;
+        localStorage.setItem("flashSaleEndTime", endTime);
+        remaining = 3 * 60 * 60;
+      }
+      
+      setTimeLeft(remaining);
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(timerInterval);
   }, []);
 
   const hours = String(Math.floor(timeLeft / 3600)).padStart(2, "0");
@@ -30,7 +52,7 @@ const FlashDeals = () => {
         {/* Header Flash Deal */}
         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
           <div className="flex flex-wrap items-center gap-4 lg:gap-8">
-            <h2 className="text-2xl font-black text-red-600 flex items-center gap-2 uppercase tracking-tight">
+            <h2 className="text-2xl font-black text-[#e30019] flex items-center gap-2 uppercase tracking-tight">
               {/* Icon Tia Sét */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +69,7 @@ const FlashDeals = () => {
               Flash Deals Chớp Nhoáng
             </h2>
 
-            {/* Bộ đếm ngược thời gian */}
+            {/* Bộ đếm ngược thời gian đồng bộ */}
             <div className="flex items-center gap-3 text-sm">
               <span className="text-gray-500 font-bold uppercase text-xs">
                 Hết hạn sau:
@@ -68,22 +90,22 @@ const FlashDeals = () => {
             </div>
           </div>
 
-          <a
-            href="#"
-            className="text-sm font-medium text-gray-500 hover:text-red-600 transition-colors"
+          {/* NÚT CHUYỂN TRANG */}
+          <Link
+            to="/flash-sale"
+            className="text-sm font-bold text-gray-500 hover:text-[#e30019] transition-colors flex items-center gap-1"
           >
-            Xem thêm deals hời
-          </a>
+            Xem thêm deals hời <span className="text-lg"></span>
+          </Link>
         </div>
 
-        {/* Lưới danh sách 6 sản phẩm */}
+        {/* Lưới danh sách TỐI ĐA 6 SẢN PHẨM */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {dummyFlashDeals.map((item) => (
-            /* 2. BỌC LINK RA BÊN NGOÀI PRODUCT CARD */
+          {dummyFlashDeals.slice(0, 6).map((item) => (
             <Link 
               to={`/product/${item.id}`} 
               key={item.id} 
-              className="block" // Thêm block để thẻ Link bọc kín toàn bộ thẻ ProductCard bên trong
+              className="block"
             >
               <ProductCard product={item} />
             </Link>

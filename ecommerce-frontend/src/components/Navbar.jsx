@@ -1,5 +1,4 @@
 import { useState } from "react";
-// Đã xóa ScrollLink, thêm useNavigate và useLocation
 import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom"; 
 import AuthModal from "./AuthModal"; 
 
@@ -10,9 +9,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hàm "Trí tuệ nhân tạo" tự phân luồng:
-  // - Nếu đang ở trang chủ: Trượt thẳng xuống mục cần tìm.
-  // - Nếu đang ở trang khác: Bay về trang chủ trước, đợi 0.1s cho trang load xong rồi mới trượt xuống.
+  // Hàm tự phân luồng cho các mục Gợi ý và Liên hệ
   const handleNavigateAndScroll = (id) => {
     if (location.pathname !== "/") {
       navigate("/");
@@ -32,6 +29,13 @@ const Navbar = () => {
     }
   };
 
+  // Hàm kiểm tra đường dẫn hiện tại để bôi đỏ menu
+  const getMenuClass = (path) => {
+    return `cursor-pointer transition-colors font-bold ${
+      location.pathname === path ? "text-red-600" : "hover:text-gray-900"
+    }`;
+  };
+
   return (
     <>
       <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -44,30 +48,28 @@ const Navbar = () => {
               <span className="bg-yellow-400 text-gray-900 text-[10px] font-bold px-2 py-1 rounded">Electronics</span>
             </RouterLink>
 
-            {/* Menu Điều Hướng Mới */}
-            <ul className="hidden md:flex items-center gap-8 text-xs font-bold text-gray-600 tracking-wide">
-              {/* Nhóm 1: Trượt xuống section ở Trang chủ */}
+            {/* Menu Điều Hướng */}
+            <ul className="hidden md:flex items-center gap-8 text-xs text-gray-600 tracking-wide">
+              {/* Nhóm 1: Chuyển sang Trang riêng biệt, tự động bôi đỏ khi đang ở trang đó */}
               <li>
-                <span onClick={() => handleNavigateAndScroll("deals-hot")} className="cursor-pointer hover:text-gray-900 transition-colors">DEALS HOT</span>
+                <RouterLink to="/flash-sale" className={getMenuClass("/flash-sale")}>DEALS HOT</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/phones" className={getMenuClass("/phones")}>PHONES</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/laptops" className={getMenuClass("/laptops")}>LAPTOPS</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/accessories" className={getMenuClass("/accessories")}>PHỤ KIỆN</RouterLink>
               </li>
 
-              {/* Nhóm 2: Chuyển sang Trang riêng biệt bằng RouterLink */}
+              {/* Nhóm 2: Trượt xuống section ở Trang chủ (Luôn giữ màu xám đen, không bao giờ đỏ) */}
               <li>
-                <RouterLink to="/phones" className="cursor-pointer hover:text-gray-900 transition-colors">PHONES</RouterLink>
+                <span onClick={() => handleNavigateAndScroll("recommendations")} className="cursor-pointer font-bold hover:text-gray-900 transition-colors">GỢI Ý RIÊNG</span>
               </li>
               <li>
-                <RouterLink to="/laptops" className="cursor-pointer hover:text-gray-900 transition-colors">LAPTOPS</RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/accessories" className="cursor-pointer hover:text-gray-900 transition-colors">PHỤ KIỆN</RouterLink>
-              </li>
-
-              {/* Nhóm 3: Lại trượt xuống section ở Trang chủ */}
-              <li>
-                <span onClick={() => handleNavigateAndScroll("recommendations")} className="cursor-pointer hover:text-gray-900 transition-colors">GỢI Ý RIÊNG</span>
-              </li>
-              <li>
-                <span onClick={() => handleNavigateAndScroll("contact")} className="cursor-pointer hover:text-gray-900 transition-colors">LIÊN HỆ</span>
+                <span onClick={() => handleNavigateAndScroll("contact")} className="cursor-pointer font-bold hover:text-gray-900 transition-colors">LIÊN HỆ</span>
               </li>
             </ul>
 
