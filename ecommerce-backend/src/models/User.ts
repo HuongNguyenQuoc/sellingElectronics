@@ -1,5 +1,5 @@
-import mongoose, { Document, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import mongoose, { Document, Model } from 'mongoose';
 
 export interface IUser extends Document {
   userName: string;
@@ -19,44 +19,49 @@ export interface IUserMethods {
 
 type UserModel = Model<IUser, {}, IUserMethods>;
 
-
-const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
-  userName: {
-    type: String,
-    required: true
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: [8, 'The password required at least 8 characters!'],
-    validate: { // Regular expression: biểu thức chính quy of mongoose to validate
-      validator: function(value) { // Validator get into a function and return true or false to validate the password
-        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value);
+const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
+  {
+    userName: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: [8, 'The password required at least 8 characters!'],
+      validate: {
+        // Regular expression: biểu thức chính quy of mongoose to validate
+        validator: function (value) {
+          // Validator get into a function and return true or false to validate the password
+          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value);
+        },
+        message:
+          'The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character!',
       },
-      message: 'The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character!'
-    }
+    },
+    type: {
+      type: String,
+      enum: ['buyer', 'seller', 'admin'], // Limit accounts
+      default: 'buyer', // default type is buyer, but we can change it to admin because of that why i don't set enum for type
+    },
+    phoneNumber: {
+      type: String,
+      required: true,
+    },
+    address: {
+      type: String,
+      required: true,
+    },
   },
-  type: {
-    type: String,
-    enum: ['buyer', 'seller', 'admin'], // Limit accounts
-    default: 'buyer' // default type is buyer, but we can change it to admin because of that why i don't set enum for type
-  },
-  phoneNumber: {
-    type: String,
-    required: true
-  },
-  address: {
-    type: String,
-    required: true
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
-});
+);
 
 // Hash the password before saving the user
 userSchema.pre('save', async function (next) {
@@ -74,12 +79,11 @@ userSchema.pre('save', async function (next) {
 });
 
 // Create a subfunction to compare the password for login
-userSchema.methods.comparePassword = async function (enteredPassword: string): Promise<boolean> { //comparePassword is the function i named for it :))
+userSchema.methods.comparePassword = async function (enteredPassword: string): Promise<boolean> {
+  //comparePassword is the function i named for it :))
   // Also methods is object, it allow define these functions
   return await bcrypt.compare(enteredPassword, this.password);
   // return true or false, becase the function compare of bcrypt will compare the password hashed in the database vs password entered by the user
 };
 
-const User = mongoose.model<IUser, UserModel>('User', userSchema);
-
-export default User;
+export const User = mongoose.model<IUser, UserModel>('User', userSchema);

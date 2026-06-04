@@ -1,10 +1,4 @@
-/**
- * @param {import('express').RequestHandler} fn The async function to wrap.
- * @returns {import('express').RequestHandler}
- */
-const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next); // The function Promise.resolve will run the function fn(req, res, next) be called
-  // and return one value that you want. If it call one of the another promise return promise be called it.
-}
+import { RequestHandler } from 'express';
 
-module.exports = asyncHandler;
+export const asyncHandler = <T extends RequestHandler>(fn: T): T =>
+  ((req, res, next) => Promise.resolve(fn(req, res, next)).catch(next)) as T;
