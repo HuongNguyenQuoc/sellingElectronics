@@ -3,13 +3,11 @@ import mongoose, { Document, Model } from 'mongoose';
 
 export interface IUser extends Document {
   userName: string;
-  email: string;
+  email?: string;
   password: string;
-  type: string;
-  phoneNumber: string;
-  address: string;
-  createAt: Date;
-  updateAt: Date;
+  role: string;
+  phoneNumber?: string;
+  address?: string;
 }
 //Document is INTERFACE of Mongoose. It contains method like: _id, save(), deleteOne(), toObject(),...
 
@@ -17,7 +15,7 @@ export interface IUserMethods {
   comparePassword(enteredPassword: string): Promise<boolean>;
 }
 
-type UserModel = Model<IUser, {}, IUserMethods>;
+export type UserModel = Model<IUser, {}, IUserMethods>; // Model User will contain type IUser and methods in IUserMethods, and {} is for statics method if we have any (static method is method that we can call directly on the model, not on the instance of the model, ex: User.findByEmail() is static method, but user.comparePassword() is instance method because we need to create an instance of user to call it)
 
 const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {
@@ -27,8 +25,10 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     },
     email: {
       type: String,
-      required: true,
+      sparse: true, // Crucial: allows multiple users to have 'undefined' or null emails if they register with a phone number
       unique: true,
+      lowercase: true,
+      trim: true,
     },
     password: {
       type: String,
@@ -44,18 +44,19 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
           'The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character!',
       },
     },
-    type: {
+    role: {
       type: String,
       enum: ['buyer', 'seller', 'admin'], // Limit accounts
       default: 'buyer', // default type is buyer, but we can change it to admin because of that why i don't set enum for type
     },
     phoneNumber: {
       type: String,
-      required: true,
+      sparse: true,
+      trim: true,
+      unique: true, // Crucial: allows multiple users to have 'undefined' or null phone numbers if they register with an email
     },
     address: {
       type: String,
-      required: true,
     },
   },
   {
@@ -82,7 +83,7 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function (enteredPassword: string): Promise<boolean> {
   //comparePassword is the function i named for it :))
   // Also methods is object, it allow define these functions
-  return await bcrypt.compare(enteredPassword, this.password);
+  return bcrypt.compare(enteredPassword, this.password);
   // return true or false, becase the function compare of bcrypt will compare the password hashed in the database vs password entered by the user
 };
 
