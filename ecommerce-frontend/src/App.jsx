@@ -9,6 +9,7 @@ import LaptopsPage from "./pages/LaptopsPage";
 import AccessoriesPage from "./pages/AccessoriesPage";
 import FlashDeal from "./pages/FlashDeal";
 import SearchPage from "./pages/SearchPage";
+import CheckoutPage from "./pages/CheckoutPage";
 import "./App.css";
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
           <Route path="/accessories" element={<AccessoriesPage />} />
           <Route path="/flash-sale" element={<FlashDeal />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
         </Routes>
       </main>
 

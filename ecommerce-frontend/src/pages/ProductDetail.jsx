@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+// 1. IMPORT THÊM useNavigate TỪ react-router-dom
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { dummyAll } from "../data/mockData";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate(); // 2. KHỞI TẠO navigate
+  
   const product = dummyAll.find((item) => item.id === id);
 
   const [mainImage, setMainImage] = useState("");
@@ -38,6 +41,34 @@ const ProductDetail = () => {
   const handleQuantityChange = (type) => {
     if (type === "minus" && quantity > 1) setQuantity(quantity - 1);
     if (type === "plus" && quantity < product.stock) setQuantity(quantity + 1);
+  };
+
+  // 3. HÀM XỬ LÝ KHI BẤM "MUA NGAY"
+  const handleBuyNow = () => {
+    // Kiểm tra xem khách đã chọn màu chưa
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      alert("Vui lòng chọn màu sắc trước khi đặt hàng!");
+      return;
+    }
+
+    // BƯỚC 1: Đóng gói dữ liệu sản phẩm TRƯỚC
+    const itemToBuy = {
+      ...product, 
+      product: product.id, 
+      quantity: quantity,
+      colorSelected: selectedColor || "Mặc định"
+    };
+
+    const totalAmount = product.price * quantity;
+
+    // BƯỚC 2: Gọi navigate 1 LẦN DUY NHẤT với đầy đủ dữ liệu và cờ isBuyNow
+    navigate('/checkout', { 
+      state: { 
+        checkoutItems: [itemToBuy], 
+        totalAmount: totalAmount,
+        isBuyNow: true // Báo cho Checkout biết là mua trực tiếp, không xóa giỏ hàng
+      } 
+    });
   };
 
   return (
@@ -88,25 +119,22 @@ const ProductDetail = () => {
               <span className="text-sm font-medium text-gray-500 uppercase tracking-widest">{product.brandName}</span>
             </div>
             
-            {/* Tiêu đề - Đã hạ nhỏ (text-xl lg:text-2xl) và bỏ font-black, chuyển sang font-semibold */}
+            {/* Tiêu đề */}
             <h1 className="text-xl lg:text-2xl font-semibold text-gray-900 leading-snug mb-3">
               {product.title}
             </h1>
             
-            {/* Đánh giá sao - ĐÃ SỬA LOGIC RENDER SAO CHÍNH XÁC */}
+            {/* Đánh giá sao */}
             <div className="flex items-center gap-2 mb-6">
               <span className="text-lg font-bold text-[#e30019]">{product.rating}</span>
               <div className="flex">
                 {[...Array(5)].map((_, index) => {
-                  // Tính phần trăm lấp đầy của từng ngôi sao (0 đến 100)
                   const fillPercent = Math.min(Math.max(product.rating - index, 0), 1) * 100;
                   return (
                     <div key={index} className="relative w-5 h-5">
-                      {/* Ngôi sao nền (Màu xám nhạt) */}
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="absolute top-0 left-0 w-5 h-5 text-gray-200">
                         <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
                       </svg>
-                      {/* Ngôi sao đầy (Màu vàng, bị cắt theo phần trăm) */}
                       <div 
                         className="absolute top-0 left-0 overflow-hidden h-full" 
                         style={{ width: `${fillPercent}%` }}
@@ -121,7 +149,7 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Khu vực Giá - Đã hạ kích cỡ (text-2xl) và font-bold */}
+            {/* Khu vực Giá */}
             <div className="mb-8">
               {product.discountPercentage > 0 && (
                 <span className="text-gray-400 line-through text-sm font-medium block mb-0.5">
@@ -180,15 +208,18 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Các Nút Hành Động - Đã hạ cỡ chữ, giảm độ đậm và đổi màu theo yêu cầu */}
+            {/* Các Nút Hành Động */}
             <div className="flex gap-4 mt-auto">
-              {/* Nút Thêm Giỏ Hàng - Đỏ nhạt (bg-red-50), viền mảnh đỏ đậm */}
               <button className="flex-1 bg-red-50 hover:bg-red-100 text-[#e30019] border border-[#e30019] font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95 text-base shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                 Thêm Vào Giỏ
               </button>
-              {/* Nút Mua Ngay - Đỏ đậm, chữ font-semibold */}
-              <button className="flex-1 bg-[#e30019] hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition-all active:scale-95 text-base shadow-md">
+              
+              {/* 4. GẮN SỰ KIỆN onClick CHO NÚT MUA NGAY */}
+              <button 
+                onClick={handleBuyNow}
+                className="flex-1 bg-[#e30019] hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition-all active:scale-95 text-base shadow-md"
+              >
                 Mua Ngay
               </button>
             </div>
@@ -209,7 +240,7 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* 3. Khung Thông số kỹ thuật chi tiết */}
+      {/* Khung Thông số kỹ thuật chi tiết */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
