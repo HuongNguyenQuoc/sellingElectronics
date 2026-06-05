@@ -77,7 +77,17 @@ const Navbar = () => {
             <div className="flex items-center gap-6">
               
               <div className="relative hidden lg:block">
-                <input type="text" placeholder="Tìm điện thoại, laptop..." className="border border-gray-300 rounded-full py-2 px-4 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 w-72 transition-all placeholder:text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Tìm điện thoại, laptop..." 
+                  // THÊM 2 SỰ KIỆN NÀY ĐỂ XỬ LÝ TÌM KIẾM
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                      navigate(`/search?keyword=${encodeURIComponent(e.target.value)}`);
+                    }
+                  }}
+                  className="border border-gray-300 rounded-full py-2 px-4 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 w-72 transition-all placeholder:text-gray-400 font-normal" 
+                />
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute right-4 top-2.5 text-gray-400"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
               </div>
 
