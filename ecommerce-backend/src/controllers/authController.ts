@@ -18,7 +18,7 @@ const buildAuthResponse = (user: UserDoc) => ({
   _id: user._id,
   userName: user.userName,
   email: user.email,
-  type: user.type,
+  role: user.role,
   token: generateToken(user._id),
 });
 
