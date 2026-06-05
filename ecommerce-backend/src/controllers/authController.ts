@@ -6,7 +6,7 @@ import { generateToken } from '../utils/generateToken';
 
 interface RegisterBody {
   userName: string;
-  email: string;
+  email?: string;
   password: string;
   phoneNumber?: string;
   address?: string;
@@ -16,8 +16,9 @@ type UserDoc = HydratedDocument<IUser>;
 
 const buildAuthResponse = (user: UserDoc) => ({
   _id: user._id,
-  userName: user.userName,
+  name: user.userName,
   email: user.email,
+  phoneNumber: user.phoneNumber,
   role: user.role,
   token: generateToken(user._id),
 });
@@ -25,24 +26,39 @@ const buildAuthResponse = (user: UserDoc) => ({
 export const registerUser: RequestHandler<{}, {}, RegisterBody> = asyncHandler(async (req, res) => {
   const { userName, email, password, phoneNumber, address } = req.body;
 
-  const userExists = await User.findOne({ email });
+  if (!email && !phoneNumber) {
+    res.status(400);
+    throw new Error('Email or phone number is required');
+  }
+
+  const conditions: Array<{ email?: string; phoneNumber?: string }> = [];
+  if (email) conditions.push({ email });
+  if (phoneNumber) conditions.push({ phoneNumber });
+
+  // Check if user exists by email or phoneNumber
+  const userExists = await User.findOne({ $or: conditions });
+
   if (userExists) {
     res.status(400);
-    throw new Error('User already exists');
+    throw new Error('User already exists with this email or phone number');
   }
 
   const user = await User.create({ userName, email, password, phoneNumber, address });
-
   res.status(201).json(buildAuthResponse(user));
 });
 
 export const loginUser: RequestHandler = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  if (!email) {
+    res.status(400);
+    throw new Error('Email or phone number is required');
+  }
+
+  const user = await User.findOne({ $or: [{ email }, { phoneNumber: email }] });
   if (!user || !(await user.comparePassword(password))) {
     res.status(401);
-    throw new Error('Invalid email or password');
+    throw new Error('Invalid email/phone or password');
   }
   res.status(200).json(buildAuthResponse(user));
 });
