@@ -16,7 +16,7 @@ type UserDoc = HydratedDocument<IUser>;
 
 const buildAuthResponse = (user: UserDoc) => ({
   _id: user._id,
-  userName: user.userName,
+  name: user.userName,
   email: user.email,
   phoneNumber: user.phoneNumber,
   role: user.role,
