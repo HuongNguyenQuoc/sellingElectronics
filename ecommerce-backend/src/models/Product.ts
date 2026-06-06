@@ -1,15 +1,16 @@
-import mongoose, { Document, Schema } from 'mongoose';
-
-export interface IProduct extends Document {
+import mongoose, { HydratedDocument, Schema } from 'mongoose';
+export interface IProduct {
   name: string;
   description: string;
   price: number;
   category: string;
   brand: string;
   stock: number;
-  images: string[];
-  specs: Map<string, string>;
+  images?: string[];
+  specs?: Map<string, string>;
 }
+
+export type ProductDocument = HydratedDocument<IProduct>;
 
 const productSchema = new Schema<IProduct>(
   {
@@ -43,14 +44,14 @@ const productSchema = new Schema<IProduct>(
       required: [true, 'Please add a product stock quantity'],
       default: 0,
     },
-    images: [
-      {
-        type: String,
-      },
-    ],
+    images: {
+      type: [String],
+      default: [],
+    },
     specs: {
       type: Map,
       of: String,
+      default: {},
     },
   },
   {
