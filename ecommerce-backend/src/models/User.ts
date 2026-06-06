@@ -1,13 +1,14 @@
 import bcrypt from 'bcryptjs';
-import mongoose, { Document, Model } from 'mongoose';
+import mongoose, { HydratedDocument, Model } from 'mongoose';
 
-export interface IUser extends Document {
+export interface IUser {
   userName: string;
   email?: string;
   password: string;
   role: string;
   phoneNumber?: string;
   address?: string;
+  comparePassword(enteredPassword: string): Promise<boolean>;
 }
 //Document is INTERFACE of Mongoose. It contains method like: _id, save(), deleteOne(), toObject(),...
 
@@ -15,7 +16,8 @@ export interface IUserMethods {
   comparePassword(enteredPassword: string): Promise<boolean>;
 }
 
-export type UserModel = Model<IUser, {}, IUserMethods>; // Model User will contain type IUser and methods in IUserMethods, and {} is for statics method if we have any (static method is method that we can call directly on the model, not on the instance of the model, ex: User.findByEmail() is static method, but user.comparePassword() is instance method because we need to create an instance of user to call it)
+export type UserDocument = HydratedDocument<IUser, IUserMethods>; // This is a type of one specifi user
+export type UserModel = Model<IUser, IUserMethods, UserDocument>; // Model User will contain type IUser and methods in IUserMethods, and {} is for statics method if we have any (static method is method that we can call directly on the model, not on the instance of the model, ex: User.findByEmail() is static method, but user.comparePassword() is instance method because we need to create an instance of user to call it)
 
 const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {
@@ -84,7 +86,7 @@ userSchema.methods.comparePassword = async function (enteredPassword: string): P
   //comparePassword is the function i named for it :))
   // Also methods is object, it allow define these functions
   return bcrypt.compare(enteredPassword, this.password);
-  // return true or false, becase the function compare of bcrypt will compare the password hashed in the database vs password entered by the user
+  // return true or false, because the function compare of bcrypt will compare the password hashed in the database vs password entered by the user
 };
 
 export const User = mongoose.model<IUser, UserModel>('User', userSchema);

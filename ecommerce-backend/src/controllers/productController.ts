@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../middlewares/asyncHandler';
-import Product from '../models/Product';
+import { Product } from '../models/Product';
 
 const createProduct = asyncHandler(async (req: Request, res: Response) => {
   const { name, description, price, category, brand, stock, images, specs } = req.body;
