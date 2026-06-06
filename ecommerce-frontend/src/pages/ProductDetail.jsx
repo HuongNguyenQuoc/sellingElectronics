@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-// 1. IMPORT THÊM useNavigate TỪ react-router-dom
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { dummyAll } from "../data/mockData";
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate(); // 2. KHỞI TẠO navigate
+  const navigate = useNavigate();
   
   const product = dummyAll.find((item) => item.id === id);
 
@@ -38,20 +37,31 @@ const ProductDetail = () => {
     ? product.price / (1 - product.discountPercentage / 100) 
     : product.price;
 
+  // ==== LOGIC TỒN KHO THEO MÀU SẮC ====
+  // 1. Tìm vị trí của màu đang chọn trong mảng colors
+  const colorIndex = product.colors?.indexOf(selectedColor) !== -1 ? product.colors?.indexOf(selectedColor) : 0;
+  
+  // 2. Lấy số lượng tồn kho tương ứng. (Hỗ trợ cả trường hợp stock là mảng hoặc số đơn lẻ cũ)
+  const currentStock = Array.isArray(product.stock) ? (product.stock[colorIndex] || 0) : (product.stock || 0);
+
   const handleQuantityChange = (type) => {
     if (type === "minus" && quantity > 1) setQuantity(quantity - 1);
-    if (type === "plus" && quantity < product.stock) setQuantity(quantity + 1);
+    // 3. Giới hạn số lượng tăng lên không được vượt quá tồn kho của màu hiện tại
+    if (type === "plus" && quantity < currentStock) setQuantity(quantity + 1);
   };
 
-  // 3. HÀM XỬ LÝ KHI BẤM "MUA NGAY"
   const handleBuyNow = () => {
-    // Kiểm tra xem khách đã chọn màu chưa
     if (product.colors && product.colors.length > 0 && !selectedColor) {
       alert("Vui lòng chọn màu sắc trước khi đặt hàng!");
       return;
     }
 
-    // BƯỚC 1: Đóng gói dữ liệu sản phẩm TRƯỚC
+    // 4. Kiểm tra trước khi mua
+    if (quantity > currentStock) {
+      alert(`Số lượng sản phẩm trong kho không đủ! Chỉ còn ${currentStock} sản phẩm.`);
+      return;
+    }
+
     const itemToBuy = {
       ...product, 
       product: product.id, 
@@ -61,14 +71,28 @@ const ProductDetail = () => {
 
     const totalAmount = product.price * quantity;
 
-    // BƯỚC 2: Gọi navigate 1 LẦN DUY NHẤT với đầy đủ dữ liệu và cờ isBuyNow
     navigate('/checkout', { 
       state: { 
         checkoutItems: [itemToBuy], 
         totalAmount: totalAmount,
-        isBuyNow: true // Báo cho Checkout biết là mua trực tiếp, không xóa giỏ hàng
+        isBuyNow: true 
       } 
     });
+  };
+
+  const handleAddToCart = () => {
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      alert("Vui lòng chọn màu sắc trước khi thêm vào giỏ!");
+      return;
+    }
+
+    // 4. Kiểm tra trước khi thêm giỏ hàng
+    if (quantity > currentStock) {
+      alert(`Số lượng sản phẩm trong kho không đủ! Chỉ còn ${currentStock} sản phẩm.`);
+      return;
+    }
+
+    alert("Đã thêm vào giỏ hàng thành công! (Logic gọi API thêm giỏ hàng sẽ nằm ở đây)");
   };
 
   return (
@@ -78,21 +102,15 @@ const ProductDetail = () => {
           
           {/* CỘT TRÁI: Khu vực Hình ảnh */}
           <div className="w-full md:w-5/12 flex flex-col gap-4">
-            {/* Ảnh chính */}
             <div className="w-full aspect-square border-2 border-gray-100 rounded-2xl flex items-center justify-center p-4 relative bg-white">
               {product.discountPercentage > 0 && (
                 <div className="absolute top-0 right-0 bg-[#e30019] text-white text-xs font-bold px-3 py-1.5 rounded-bl-xl rounded-tr-xl z-10 shadow-sm">
                   -{product.discountPercentage}%
                 </div>
               )}
-              <img 
-                src={mainImage} 
-                alt={product.title} 
-                className="w-[90%] h-[90%] object-contain"
-              />
+              <img src={mainImage} alt={product.title} className="w-[90%] h-[90%] object-contain" />
             </div>
             
-            {/* Danh sách ảnh nhỏ */}
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {product.images.map((img, index) => (
                 <div 
@@ -110,8 +128,6 @@ const ProductDetail = () => {
 
           {/* CỘT PHẢI: Thông tin Sản phẩm */}
           <div className="w-full md:w-7/12 flex flex-col">
-            
-            {/* Nhãn hiệu */}
             <div className="flex items-center gap-2 mb-3">
               <span className="bg-[#ffc107] text-black text-[11px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wider shadow-sm">
                 Chính Hãng
@@ -119,12 +135,10 @@ const ProductDetail = () => {
               <span className="text-sm font-medium text-gray-500 uppercase tracking-widest">{product.brandName}</span>
             </div>
             
-            {/* Tiêu đề */}
             <h1 className="text-xl lg:text-2xl font-semibold text-gray-900 leading-snug mb-3">
               {product.title}
             </h1>
             
-            {/* Đánh giá sao */}
             <div className="flex items-center gap-2 mb-6">
               <span className="text-lg font-bold text-[#e30019]">{product.rating}</span>
               <div className="flex">
@@ -135,10 +149,7 @@ const ProductDetail = () => {
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="absolute top-0 left-0 w-5 h-5 text-gray-200">
                         <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
                       </svg>
-                      <div 
-                        className="absolute top-0 left-0 overflow-hidden h-full" 
-                        style={{ width: `${fillPercent}%` }}
-                      >
+                      <div className="absolute top-0 left-0 overflow-hidden h-full" style={{ width: `${fillPercent}%` }}>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#ffc107]">
                           <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
                         </svg>
@@ -149,7 +160,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Khu vực Giá */}
             <div className="mb-8">
               {product.discountPercentage > 0 && (
                 <span className="text-gray-400 line-through text-sm font-medium block mb-0.5">
@@ -169,7 +179,10 @@ const ProductDetail = () => {
                   {product.colors.map((color) => (
                     <button
                       key={color}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => {
+                        setSelectedColor(color);
+                        setQuantity(1); // 5. Tự động reset số lượng về 1 khi người dùng đổi màu
+                      }}
                       className={`px-5 py-2 rounded-lg text-sm font-medium transition-all border ${
                         selectedColor === color 
                           ? "border-[#e30019] text-[#e30019] bg-red-50" 
@@ -179,6 +192,10 @@ const ProductDetail = () => {
                       {color}
                     </button>
                   ))}
+                </div>
+                {/* 6. UI HIỂN THỊ SỐ LƯỢNG SẴN CÓ */}
+                <div className="mt-3 text-sm text-gray-600">
+                   Số lượng sẵn có: <span className="mt-3 text-sm text-gray-600">{currentStock}</span>
                 </div>
               </div>
             )}
@@ -210,12 +227,14 @@ const ProductDetail = () => {
 
             {/* Các Nút Hành Động */}
             <div className="flex gap-4 mt-auto">
-              <button className="flex-1 bg-red-50 hover:bg-red-100 text-[#e30019] border border-[#e30019] font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95 text-base shadow-sm">
+              <button 
+                onClick={handleAddToCart}
+                className="flex-1 bg-red-50 hover:bg-red-100 text-[#e30019] border border-[#e30019] font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95 text-base shadow-sm"
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                 Thêm Vào Giỏ
               </button>
               
-              {/* 4. GẮN SỰ KIỆN onClick CHO NÚT MUA NGAY */}
               <button 
                 onClick={handleBuyNow}
                 className="flex-1 bg-[#e30019] hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition-all active:scale-95 text-base shadow-md"
@@ -224,7 +243,6 @@ const ProductDetail = () => {
               </button>
             </div>
 
-            {/* Vận chuyển & Bảo hành */}
             <div className="mt-8 flex gap-6 pt-6 border-t border-gray-100">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#e30019]"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
