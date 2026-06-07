@@ -747,3 +747,54 @@ export const dummyCart = [
   { product: "50", quantity: 1, colorSelected: "Đen" },
   { product: "47", quantity: 1, colorSelected: "Trắng" }
 ];
+
+export const dummyMessages = [
+  {
+    messageId: "msg_01",
+    type: "text",
+    senderId: "admin",
+    receiverId: "user_123",
+    content: "Chào bạn! TechVolt có thể giúp gì cho bạn hôm nay ạ? ⚡",
+    orderData: null,
+    timestamp: 1717746693000,
+    isRead: true
+  },
+  {
+    messageId: "msg_02",
+    type: "text",
+    senderId: "user_123",
+    receiverId: "admin",
+    content: "Tôi muốn hỏi về chính sách trả góp 0% cho Laptop Gaming",
+    orderData: null,
+    timestamp: 1717746700000,
+    isRead: true
+  },
+  {
+    messageId: "msg_03",
+    type: "order",
+    senderId: "admin",
+    receiverId: "user_123",
+    content: "",
+    orderData: {
+      checkoutItems: [
+        {
+          title: "iPhone 15 Pro Max 256GB",
+          thumbnail: "https://tse3.mm.bing.net/th/id/OIP.J-fPKJ-EHsOh7Gz25PQ0kwHaHa?pid=Api&h=220&P=0",
+          colorSelected: "Xanh Titan",
+          quantity: 1,
+          price: 29890000
+        },
+        {
+          title: "Sony WH-1000XM5 ANC",
+          thumbnail: "https://tse3.mm.bing.net/th/id/OIP.9zapIm1Iz0GSlxDMw9gmawHaFj?pid=Api&h=220&P=0",
+          colorSelected: "Đen",
+          quantity: 2,
+          price: 4495000
+        }
+      ],
+      totalAmount: 38880000
+    },
+    timestamp: 1717746705000,
+    isRead: false
+  }
+];
