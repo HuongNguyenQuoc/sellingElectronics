@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { dummyAll } from "../data/mockData";
+import { dummyAll } from "../../data/mockData";
 
 const ProductDetail = () => {
   const { id } = useParams();

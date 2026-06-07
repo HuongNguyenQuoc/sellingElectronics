@@ -1,16 +1,17 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom"; // Nhập Link từ react-router-dom
-import { dummyAll } from "../data/mockData";
+import { dummyAll } from "../../data/mockData";
 
-const PhonesPage = () => {
-  const allPhones = useMemo(() => {
-    return dummyAll.filter((item) => item.tags.includes("smartphone"));
+const LaptopsPage = () => {
+  // Đã đổi tag lọc thành "laptop"
+  const allLaptops = useMemo(() => {
+    return dummyAll.filter((item) => item.tags.includes("laptop"));
   }, []);
 
   const availableBrands = useMemo(() => {
-    const brands = allPhones.map((phone) => phone.brandName);
+    const brands = allLaptops.map((laptop) => laptop.brandName);
     return [...new Set(brands)];
-  }, [allPhones]);
+  }, [allLaptops]);
 
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedPrices, setSelectedPrices] = useState([]);
@@ -35,15 +36,15 @@ const PhonesPage = () => {
     );
   };
 
-  const filteredPhones = useMemo(() => {
-    let result = allPhones.filter((phone) => {
-      const matchBrand = selectedBrands.length === 0 || selectedBrands.includes(phone.brandName);
+  const filteredLaptops = useMemo(() => {
+    let result = allLaptops.filter((laptop) => {
+      const matchBrand = selectedBrands.length === 0 || selectedBrands.includes(laptop.brandName);
       
       const matchPrice =
         selectedPrices.length === 0 ||
         selectedPrices.some((priceId) => {
           const range = priceRanges.find((r) => r.id === priceId);
-          return phone.price >= range.min && phone.price <= range.max;
+          return laptop.price >= range.min && laptop.price <= range.max;
         });
 
       return matchBrand && matchPrice;
@@ -56,7 +57,7 @@ const PhonesPage = () => {
     });
 
     return result;
-  }, [allPhones, selectedBrands, selectedPrices, sortOrder]);
+  }, [allLaptops, selectedBrands, selectedPrices, sortOrder]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN").format(price) + "đ";
@@ -71,14 +72,18 @@ const PhonesPage = () => {
     <div className="flex flex-col">
       {/* Hero Banner */}
       <div className="bg-gray-900 text-white relative overflow-hidden">
+        {/* Lớp gradient đen từ trái sang */}
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-transparent z-10"></div>
+        
+        {/* Ảnh nền có opacity-40 y hệt bên PhonesPage để tạo nền đen đen mờ ảo */}
         <div 
-          className="absolute inset-0 opacity-40 bg-cover bg-center" 
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?q=80&w=2071&auto=format&fit=crop')" }}
+          className="absolute inset-0 opacity-40 bg-cover bg-[center_30%] bg-no-repeat" 
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=2026&auto=format&fit=crop')" }}
         ></div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-20">
-          <h1 className="text-5xl font-black mb-4">Điện thoại thông minh</h1>
-          <p className="text-gray-300 max-w-xl text-lg">Khám phá các thiết bị di động với công nghệ tiên tiến nhất. Định hình lại giới hạn của một chiếc smartphone.</p>
+          <h1 className="text-5xl font-black mb-4">Laptop & MacBook</h1>
+          <p className="text-gray-300 max-w-xl text-lg">Nâng tầm hiệu suất làm việc và giải trí với các dòng máy tính xách tay cấu hình khủng, thiết kế mỏng nhẹ hàng đầu.</p>
         </div>
       </div>
 
@@ -162,31 +167,31 @@ const PhonesPage = () => {
         <main className="flex-1">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
-              Tất cả sản phẩm <span className="text-gray-400 text-base font-normal">({filteredPhones.length} thiết bị)</span>
+              Tất cả Laptop <span className="text-gray-400 text-base font-normal">({filteredLaptops.length} thiết bị)</span>
             </h2>
           </div>
 
-          {filteredPhones.length > 0 ? (
+          {filteredLaptops.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredPhones.map((phone) => (
+              {filteredLaptops.map((laptop) => (
                 <Link 
-                  to={`/product/${phone.id}`} 
-                  key={phone.id} 
+                  to={`/product/${laptop.id}`} 
+                  key={laptop.id} 
                   className="bg-white rounded-[20px] p-4 shadow-sm border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative flex flex-col group cursor-pointer block"
                 >
                   
                   {/* Badge % Giảm giá */}
-                  {phone.discountPercentage > 0 && (
+                  {laptop.discountPercentage > 0 && (
                     <div className="absolute top-0 right-0 bg-[#e30019] text-white text-[13px] font-bold px-3 py-1.5 rounded-bl-[16px] rounded-tr-[19px] z-10">
-                      -{phone.discountPercentage}%
+                      -{laptop.discountPercentage}%
                     </div>
                   )}
 
                   {/* Ảnh sản phẩm */}
                   <div className="w-full aspect-square overflow-hidden flex items-center justify-center pt-2">
                     <img 
-                      src={phone.thumbnail} 
-                      alt={phone.title} 
+                      src={laptop.thumbnail} 
+                      alt={laptop.title} 
                       className="object-contain w-[85%] h-[85%] group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -194,18 +199,18 @@ const PhonesPage = () => {
                   {/* Thông tin sản phẩm */}
                   <div className="mt-4 flex flex-col flex-grow text-left">
                     <span className="text-[12px] font-bold text-[#8f9bb3] uppercase tracking-wide">
-                      {phone.brandName}
+                      {laptop.brandName}
                     </span>
                     
                     <h3 className="text-[15px] font-semibold text-[#002f4b] mt-1 line-clamp-2 min-h-[44px]">
-                      {phone.title}
+                      {laptop.title}
                     </h3>
                     
                     {/* Đánh giá sao - ĐÃ ÁP DỤNG LOGIC ĐỔ ĐẦY THEO PHẦN TRĂM */}
                     <div className="flex items-center gap-1.5 mt-2">
                       <div className="flex">
                         {[...Array(5)].map((_, index) => {
-                          const fillPercent = Math.min(Math.max((phone.rating || 0) - index, 0), 1) * 100;
+                          const fillPercent = Math.min(Math.max((laptop.rating || 0) - index, 0), 1) * 100;
                           return (
                             <div key={index} className="relative w-3.5 h-3.5">
                               {/* Ngôi sao nền màu xám */}
@@ -226,21 +231,21 @@ const PhonesPage = () => {
                         })}
                       </div>
                       <span className="text-[13px] text-[#8f9bb3]">
-                        ({phone.reviews?.length || 0})
+                        ({laptop.reviews?.length || 0})
                       </span>
                     </div>
 
                     <div className="mt-3 mb-4 flex flex-col">
-                      {phone.discountPercentage > 0 ? (
+                      {laptop.discountPercentage > 0 ? (
                         <span className="text-[13px] text-[#8f9bb3] line-through font-medium">
-                          {formatPrice(getOriginalPrice(phone.price, phone.discountPercentage))}
+                          {formatPrice(getOriginalPrice(laptop.price, laptop.discountPercentage))}
                         </span>
                       ) : (
                         <span className="h-[20px]"></span>
                       )}
                       
                       <span className="text-[20px] font-bold text-[#e30019]">
-                        {formatPrice(phone.price)}
+                        {formatPrice(laptop.price)}
                       </span>
                     </div>
 
@@ -270,4 +275,4 @@ const PhonesPage = () => {
   );
 };
 
-export default PhonesPage;
+export default LaptopsPage;

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 // CHÚ Ý: Đảm bảo đường dẫn import ProductCard này đúng
-import ProductCard from "../components/ProductCard"; 
-import { dummyFlashDeals } from "../data/mockData";
+import ProductCard from "../../components/ProductCard"; 
+import { dummyFlashDeals } from "../../data/mockData";
 
 const FlashDeal = () => {
   const [timeLeft, setTimeLeft] = useState(0);

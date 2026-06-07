@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { dummyCart, dummyAll } from "../data/mockData";
+import { dummyCart, dummyAll } from "../../data/mockData";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState(dummyCart);

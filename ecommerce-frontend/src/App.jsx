@@ -1,26 +1,34 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer"; // Import thêm Footer
-import HomePage from "./pages/HomePage";
-import ProductDetail from "./pages/ProductDetail";
-import CartPage from "./pages/CartPage";
-import PhonesPage from "./pages/PhonesPage";
-import LaptopsPage from "./pages/LaptopsPage";
-import AccessoriesPage from "./pages/AccessoriesPage";
-import FlashDeal from "./pages/FlashDeal";
-import SearchPage from "./pages/SearchPage";
-import CheckoutPage from "./pages/CheckoutPage";
 import "./App.css";
+
+// --- LAYOUTS & GUARDS ---
+import MainLayout from "./layouts/MainLayout";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminRoute from "./components/AdminRoute";
+
+// --- PAGES KHÁCH HÀNG ---
+import HomePage from "./pages/user/HomePage";
+import ProductDetail from "./pages/user/ProductDetail";
+import CartPage from "./pages/user/CartPage";
+import PhonesPage from "./pages/user/PhonesPage";
+import LaptopsPage from "./pages/user/LaptopsPage";
+import AccessoriesPage from "./pages/user/AccessoriesPage";
+import FlashDeal from "./pages/user/FlashDeal";
+import SearchPage from "./pages/user/SearchPage";
+import CheckoutPage from "./pages/user/CheckoutPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminChat from "./pages/admin/AdminChat";
 
 function App() {
   return (
     <BrowserRouter>
-      {/* Navbar luôn ở trên cùng */}
-      <Navbar />
-
-      {/* Khu vực nội dung thay đổi theo trang */}
-      <main className="bg-[#fbf9f8] min-h-screen">
-        <Routes>
+      <Routes>
+        {/* ================================================== */}
+        {/* LUỒNG 1: GIAO DIỆN KHÁCH HÀNG (Có Navbar & Footer) */}
+        {/* ================================================== */}
+        <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
@@ -30,11 +38,20 @@ function App() {
           <Route path="/flash-sale" element={<FlashDeal />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
-        </Routes>
-      </main>
+        </Route>
 
-      {/* Footer luôn ở dưới cùng */}
-      <Footer />
+        {/* ================================================== */}
+        {/* LUỒNG 2: GIAO DIỆN ADMIN (Có Sidebar, Cần Quyền)   */}
+        {/* ================================================== */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="chat" element={<AdminChat />} />
+          </Route>
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }
