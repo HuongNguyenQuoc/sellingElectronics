@@ -1,4 +1,7 @@
 import { Router } from 'express';
+import { restrictTo } from '../middlewares/Role.middleware';
+import { protect } from '../middlewares/authMiddleware';
+
 import {
   createProduct,
   deleteProduct,
@@ -9,7 +12,12 @@ import {
 
 const router = Router();
 
-router.route('/').get(getAllProducts).post(createProduct);
-router.route('/:id').get(getProductById).put(updateProduct).delete(deleteProduct);
+router
+  .route('/').get(getAllProducts).post(protect, restrictTo('admin'), createProduct);
+router
+  .route('/:id')
+  .get(getProductById)
+  .put(protect, restrictTo('admin'), updateProduct)
+  .delete(protect, restrictTo('admin'), deleteProduct);
 
 export default router;

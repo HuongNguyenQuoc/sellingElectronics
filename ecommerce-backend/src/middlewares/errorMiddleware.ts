@@ -8,6 +8,14 @@ export const notFound: RequestHandler = (req, res, next): void => {
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next): void => {
   const statusCode = err.statusCode ?? (res.statusCode === 200 ? 500 : res.statusCode);
+  /*
+  ??
+
+  This is called nullish coalescing operator.
+  It means:
+  Use the right side only if the left side is null or undefined.
+  
+  */
   res.status(statusCode).json({
     status: statusCode >= 500 ? 'error' : 'fail',
     message: err.message,
@@ -15,3 +23,12 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next): void => 
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 };
+
+/*
+Unknown route
+→ notFound
+→ create AppError(404)
+→ next(error)
+→ errorHandler
+→ send JSON response
+*/
