@@ -1,32 +1,14 @@
 import { Request, Response } from 'express';
-const Order = require('../models/orderModel');
-const Product = require('../models/productModel');
+import { createOrderService, getAllOrdersService, getOrderByIdService, updateOrderStatusService } from '../services/order.service'
+const Order = require('../models/Order');
+const Product = require('../models/Product');
 
 // Create new order
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    
 // TODO: Đang test, tí thêm phần user vào đây
-    const { userId,items, shippingAddress, paymentMethod } = req.body;
-
-    let totalCost = 0;
-    for (const item of items) {
-      const product = await Product.findById(item.product);
-      if (!product) {
-        return res.status(404).json({ message: `Product with ID ${item.product} not found` });
-      }
-      totalCost += product.price * item.quantity;
-    }
-
-    const newOrder = await Order.create({
-      user: userId,
-      items: items,
-      shippingAddress: shippingAddress,
-      paymentMethod: paymentMethod,
-      totalCost: totalCost
-    });
-    res.status(201).json({message: 'Order created successfully'});
-
+    const result = await createOrderService(req.body);
+    res.status(201).json(result);
   } catch (error) {
     res.status(500).json({ message: 'Error creating order', error });
   }};

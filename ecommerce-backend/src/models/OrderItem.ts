@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
+// lưu thông tin tại thời điểm mua hàng, tránh trường hợp sau này sản phẩm bị xóa or thay đổi thông tin
 export interface IOrderItem {
     product: Types.ObjectId;
     name: string;

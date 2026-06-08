@@ -5,19 +5,17 @@ import { OrderStatus } from './OrderStatus';
 
 // all item when buying
 export interface IOrder{
-    user: Types.ObjectId;
+    userId: string;
     items: IOrderItem[];
     shippingAddress: IShippingAddress;
     status: OrderStatus;       
     paymentMethod: string;    // NOTEEEEEEEEEEEEEE
-    orderDate: Date;
     totalCost: number;         
 }
 
 const OrderSchema = new Schema<IOrder>({
-    user: { 
-        type: Schema.Types.ObjectId,
-        ref: 'User',
+    userId: { 
+        type: String,
         required: true
     },
     items: [OrderItemSchema],
@@ -30,10 +28,6 @@ const OrderSchema = new Schema<IOrder>({
     paymentMethod: {
         type: String,
         required: true
-    },
-    orderDate: {
-        type: Date,
-        default: Date.now
     }
 }, {
     timestamps: true

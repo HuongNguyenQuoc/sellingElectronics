@@ -1,27 +1,29 @@
-export class OrderItemDto {
-  product!: string;
-  quantity!: number;
-  price!: number; // Price at the time order
+export interface OrderItemDto {
+  productId: string;
+  image?: string;
+  quantity: number;
+  price: number; // Price at the time order
 }
 
 // Address in order
-export class ShippingAddressDto {
-  street!: string;
-  city!: string;
-  postalCode!: string;
-  country!: string;
+export interface ShippingAddressDto {
+  street: string;
+  city: string;
+  postalCode: string;
+  country: string;
 }
 
 // Use for Create Order
-export class CreateOrderDto {
-  items!: OrderItemDto[];
-  shippingAddress!: ShippingAddressDto;
-  paymentMethod!: string; // "credit-card", "paypal",...
+export interface CreateOrderDto {
+  userId: string;
+  items: OrderItemDto[];
+  shippingAddress: ShippingAddressDto;
+  paymentMethod: string; // "credit-card", "paypal",...
 }
 
 // Use for Update Order Status 
-export class UpdateOrderStatusDto {
-  status!: string; // "Pending", "Processing", "Shipped",...
+export interface UpdateOrderStatusDto {
+  status: string; // "Pending", "Processing", "Shipped",...
 }
 
 // Use for Response

@@ -7,8 +7,9 @@ export class OrderRepository {
     return await Order.find({}).populate('user').populate('items.product');
   }
 
+
   // Get order follow by ID
-  async finById(id: string): Promise<IOrder | null> {
+  async findById(id: string): Promise<IOrder | null> {
     return await Order.findById(id).populate('user').populate('items.product');
   }
 
@@ -19,9 +20,8 @@ export class OrderRepository {
 
   // Create new order
   async create(orderData: {
-    user: Types.ObjectId;
+    userId: string;
     items: any[];
-    shippingAddress: any;
     paymentMethod: string;
     totalCost: number;
   }): Promise<IOrder> {
