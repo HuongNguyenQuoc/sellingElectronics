@@ -1,7 +1,8 @@
 export class AppError extends Error {
   constructor(
     public statusCode: number,
-    message: string
+    message: string,
+    public errors?: unknown
   ) {
     super(message);
     Error.captureStackTrace(this, this.constructor); // (this, this.constructor) -> (objectCanStoreError, functionToIgnore)

@@ -26,12 +26,16 @@ const protect = async (
 
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
-      // because jwt.verify return type is string / object so we need
-      // to cast it to the type we want
+      // because jwt.verify return type is string / object so we need to cast it to the type we want
 
       // Fetch user to attach to request
       req.user = await User.findById(decoded.id).select('-password'); // The minus sign means we don't want to include the password field in the user object
-      next(); // This means the user is authenticated and we can proceed to the next middleware or route handler
+      if (!req.user) {
+        res.status(401).json({ message: "User no longer exists" });
+        return;
+      }
+
+      return next(); // This means the user is authenticated and we can proceed to the next middleware or route handler
     } catch (error) {
       return res.status(401).json({ message: "Token is not valid" });
     }
