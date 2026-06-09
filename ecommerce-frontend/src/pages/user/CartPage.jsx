@@ -19,8 +19,19 @@ const CartPage = () => {
     setCartItems((prev) =>
       prev.map((item) => {
         if (item.product === productId && item.colorSelected === color) {
-          const productDetail = dummyAll.find((p) => p.id === productId);
-          const maxStock = productDetail ? productDetail.stock : 99;
+          const productDetail = dummyAll.find((p) => String(p.id) === String(productId));
+
+          // Lấy index của màu sắc được chọn trong mảng colors của sản phẩm
+          const colorIndex = productDetail?.colors?.indexOf(color);
+
+          // Lấy số lượng tồn kho tương ứng từ mảng stock, nếu không tìm thấy thì mặc định là 99
+          let maxStock = 99;
+          if (colorIndex !== undefined && colorIndex !== -1 && productDetail?.stock && productDetail.stock[colorIndex] !== undefined) {
+             maxStock = productDetail.stock[colorIndex];
+          } else if (typeof productDetail?.stock === 'number') {
+             // Trường hợp dự phòng nếu một số sản phẩm vẫn dùng stock là một số duy nhất
+             maxStock = productDetail.stock;
+          }
 
           let newQuantity = item.quantity;
           if (type === "minus" && newQuantity > 1) newQuantity -= 1;

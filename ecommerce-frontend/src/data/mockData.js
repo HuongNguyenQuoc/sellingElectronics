@@ -811,7 +811,7 @@ export const mockOrders = [
     shippingAddress: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
     orderStatus: "PROCESSING", 
     paymentMethod: "COD",
-    orderDate: 1716537600000 
+    orderDate: 1780963200000 // createAt
   },
   {
     orderId: "ORD-99382",
@@ -826,7 +826,7 @@ export const mockOrders = [
     shippingAddress: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
     orderStatus: "SHIPPED", 
     paymentMethod: "COD",
-    orderDate: 1716105600000 
+    orderDate: 1780963200000 
   },
   {
     orderId: "ORD-10294",
@@ -838,7 +838,7 @@ export const mockOrders = [
     shippingAddress: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
     orderStatus: "DELIVERED", 
     paymentMethod: "COD",
-    orderDate: 1715241600000 
+    orderDate: 1780876800000
   },
   {
     orderId: "ORD-04821",
@@ -850,7 +850,7 @@ export const mockOrders = [
     shippingAddress: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
     orderStatus: "CANCELLED", 
     paymentMethod: "COD",
-    orderDate: 1714550400000 
+    orderDate: 1780876800000 
   }
 ];
 
