@@ -47,7 +47,7 @@ const HeroSection = () => {
                 Cấu hình đỉnh cao, làm việc hiệu quả hơn bao giờ hết.
               </p>
               <button className="text-sm font-bold border-b-2 border-white text-white w-fit hover:text-yellow-400 hover:border-yellow-400 transition-colors">
-                Mua ngay
+                Xem chi tiết
               </button>
             </div>
           </div>

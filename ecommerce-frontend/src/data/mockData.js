@@ -800,6 +800,60 @@ export const dummyMessages = [
   }
 ];
 
+export const mockOrders = [
+  {
+    orderId: "ORD-28491",
+    userId: "user_123",
+    itemIds: [{ product: "14", quantity: 1, colorSelected: "Xanh" }],
+    totalAmount: 5990000,
+    fullName: "Nguyễn Văn A",
+    phone: "090 123 4567",
+    shippingAddress: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
+    orderStatus: "PROCESSING", 
+    paymentMethod: "COD",
+    orderDate: 1716537600000 
+  },
+  {
+    orderId: "ORD-99382",
+    userId: "user_123",
+    itemIds: [
+      { product: "15", quantity: 1, colorSelected: "Xám Space" },
+      { product: "16", quantity: 2, colorSelected: "Trắng" }  
+    ],
+    totalAmount: 27690000,
+    fullName: "Nguyễn Văn A",
+    phone: "090 123 4567",
+    shippingAddress: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
+    orderStatus: "SHIPPED", 
+    paymentMethod: "COD",
+    orderDate: 1716105600000 
+  },
+  {
+    orderId: "ORD-10294",
+    userId: "user_123",
+    itemIds: [{ product: "14", quantity: 1, colorSelected: "Đen" }],
+    totalAmount: 5990000,
+    fullName: "Nguyễn Văn A",
+    phone: "090 123 4567",
+    shippingAddress: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
+    orderStatus: "DELIVERED", 
+    paymentMethod: "COD",
+    orderDate: 1715241600000 
+  },
+  {
+    orderId: "ORD-04821",
+    userId: "user_123",
+    itemIds: [{ product: "16", quantity: 1, colorSelected: "Tím" }],
+    totalAmount: 350000,
+    fullName: "Nguyễn Văn A",
+    phone: "090 123 4567",
+    shippingAddress: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
+    orderStatus: "CANCELLED", 
+    paymentMethod: "COD",
+    orderDate: 1714550400000 
+  }
+];
+
 
 // DỮ LIỆU GIẢ CHO PHẦN ADMIN
 export const mockUsers = [

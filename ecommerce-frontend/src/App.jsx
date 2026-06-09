@@ -8,6 +8,8 @@ import AdminRoute from "./components/AdminRoute";
 
 // --- PAGES KHÁCH HÀNG ---
 import HomePage from "./pages/user/HomePage";
+import MyOrders from "./pages/user/MyOrders";
+import OrderDetails from "./pages/user/OrderDetails";
 import ProductDetail from "./pages/user/ProductDetail";
 import CartPage from "./pages/user/CartPage";
 import PhonesPage from "./pages/user/PhonesPage";
@@ -40,6 +42,8 @@ function App() {
           <Route path="/flash-sale" element={<FlashDeal />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/orders" element={<MyOrders />} />
+          <Route path="/orders/:id" element={<OrderDetails />} />
         </Route>
 
         {/* ================================================== */}
