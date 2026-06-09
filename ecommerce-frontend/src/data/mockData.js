@@ -748,6 +748,7 @@ export const dummyCart = [
   { product: "47", quantity: 1, colorSelected: "Trắng" }
 ];
 
+//dữ liệu giả cho phần chat hỗ trợ của bên khách hàng
 export const dummyMessages = [
   {
     messageId: "msg_01",
@@ -787,6 +788,90 @@ export const dummyMessages = [
         {
           title: "Sony WH-1000XM5 ANC",
           thumbnail: "https://tse3.mm.bing.net/th/id/OIP.9zapIm1Iz0GSlxDMw9gmawHaFj?pid=Api&h=220&P=0",
+          colorSelected: "Đen",
+          quantity: 2,
+          price: 4495000
+        }
+      ],
+      totalAmount: 38880000
+    },
+    timestamp: 1717746705000,
+    isRead: false
+  }
+];
+
+
+// DỮ LIỆU GIẢ CHO PHẦN ADMIN
+export const mockUsers = [
+  {
+    userId: "user_123",
+    userName: "Nguyễn Văn An",
+    type: "buyer",
+    email: "an.nguyen@email.com",
+    phoneNumber: "0901234567",
+    address: "Hà Nội",
+    password: "***",
+  },
+  {
+    userId: "user_456",
+    userName: "Trần Thị Bích",
+    type: "buyer",
+    email: "bich.tran@email.com",
+    phoneNumber: "0919876543",
+    address: "TP. HCM",
+    password: "***",
+  },
+  {
+    userId: "user_789",
+    userName: "Lê Hoàng Phúc",
+    type: "buyer",
+    email: "phuc.le@email.com",
+    phoneNumber: "0987654321",
+    address: "Đà Nẵng",
+    password: "***",
+  }
+];
+
+// MOCK DATA: LỊCH SỬ TIN NHẮN
+export const mockMessages = [
+  {
+    messageId: "msg_01",
+    type: "text",
+    senderId: "admin",
+    receiverId: "user_123",
+    content: "Chào bạn, TechVolt có thể giúp gì cho bạn ạ?",
+    orderData: null,
+    timestamp: 1717745000000,
+    isRead: true
+  },
+  {
+    messageId: "msg_02",
+    type: "text",
+    senderId: "user_123",
+    receiverId: "admin",
+    content: "Tôi muốn hỏi về chính sách trả góp 0% cho Laptop Gaming",
+    orderData: null,
+    timestamp: 1717746700000,
+    isRead: true
+  },
+  {
+    messageId: "msg_03",
+    type: "order",
+    senderId: "user_123",
+    receiverId: "admin",
+    content: "Admin kiểm tra giúp tôi đơn hàng này bao giờ giao nhé!",
+    orderData: {
+      checkoutItems: [
+        {
+          title: "iPhone 15 Pro Max 256GB",
+          thumbnail: "https://tse3.mm.bing.net/th/id/OIP.J-fPKJ-EHsOh7Gz25PQ0kwHaHa?pid=Api&h=220&P=0",
+          colorSelected: "Xanh Titan",
+          quantity: 1,
+          price: 29890000
+        },
+        {
+          title: "Sony WH-1000XM5 ANC",
+          thumbnail: "https://tse4.mm.bing.net/th/id/OIP.xT2fDELtFnL48YryWjo2OQHaHa?pid=Api&h=220&P=0",
           colorSelected: "Đen",
           quantity: 2,
           price: 4495000
