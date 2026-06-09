@@ -20,6 +20,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminChat from "./pages/admin/AdminChat";
+import AdminAddProduct from "./pages/admin/AdminAddProduct";
+import AdminEditProduct from "./pages/admin/AdminEditProduct";
 
 function App() {
   return (
@@ -47,6 +49,8 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="products/add" element={<AdminAddProduct />} />
+            <Route path="products/edit/:id" element={<AdminEditProduct />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="chat" element={<AdminChat />} />
           </Route>
