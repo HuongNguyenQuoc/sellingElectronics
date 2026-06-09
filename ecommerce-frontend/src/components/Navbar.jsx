@@ -4,11 +4,29 @@ import AuthModal from "./AuthModal";
 
 const Navbar = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  // Fake state đã đăng nhập để code Frontend , khi có backend thì để "const [user, setUser] = useState(null);" là ok
-const [user, setUser] = useState({ name: "Hải Dev" });
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  }); 
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+
+    if (userData.role === "admin") {
+      navigate("/admin");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/");
+  };
 
   // Hàm tự phân luồng cho các mục Gợi ý và Liên hệ
   const handleNavigateAndScroll = (id) => {
@@ -115,7 +133,7 @@ const [user, setUser] = useState({ name: "Hải Dev" });
 
               {/* Đăng nhập/Profile */}
               <div 
-                onClick={() => user ? setUser(null) : setIsAuthModalOpen(true)}
+                onClick={() => user ? handleLogout() : setIsAuthModalOpen(true)}
                 className="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-gray-900 group"
                 title={user ? "Nhấn để đăng xuất" : "Nhấn để đăng nhập"}
               >
@@ -140,7 +158,7 @@ const [user, setUser] = useState({ name: "Hải Dev" });
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
-        onLoginSuccess={(userData) => setUser(userData)} 
+        onLoginSuccess={handleLoginSuccess} 
       />
     </>
   );

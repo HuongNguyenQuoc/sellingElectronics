@@ -1,9 +1,9 @@
-import { CreateOrderDto } from "../dtos_data-transfer-object/order.dto";
+import { CreateOrderDto } from "../dtos/order.dto";
 import { OrderRepository } from "../repositories";
 import { ProductRepository } from "../repositories/product.repository";
 
-const Order = require('../models/orderModel');
-const Product = require('../models/productModel');
+//const Order = require('../models/orderModel');
+//const Product = require('../models/productModel');
 
 const orderRepository = new OrderRepository();
 const productRepository = new ProductRepository();

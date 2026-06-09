@@ -6,6 +6,8 @@ export const loginUser = async (emailOrPhone, password) => {
     password,
   });
   localStorage.setItem("token", data.token);
+  localStorage.setItem("role", data.role);
+  localStorage.setItem("user", JSON.stringify(data));
   return data;
 };
 
@@ -16,5 +18,7 @@ export const registerUser = async (name, emailOrPhone, password) => {
     password,
   });
   localStorage.setItem("token", data.token);
+  localStorage.setItem("role", data.role);
+  localStorage.setItem("user", JSON.stringify(data));
   return data;
 };

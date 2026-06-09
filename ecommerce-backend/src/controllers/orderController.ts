@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createOrderService, getAllOrdersService, getOrderByIdService, updateOrderStatusService } from '../services/order.service'
+import { createOrderService } from '../services/order.service'
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 

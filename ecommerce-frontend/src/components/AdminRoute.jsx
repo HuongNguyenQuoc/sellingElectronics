@@ -1,11 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 
 const AdminRoute = () => {
-  // Lấy role từ bộ nhớ (bạn có thể mock role="admin" trong AuthModal)
+  const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
   // Nếu là admin -> cho phép truy cập
-  if (role === "admin") {
+  if (token && role === "admin") {
     return <Outlet />;
   }
 
