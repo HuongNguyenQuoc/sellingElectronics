@@ -32,4 +32,9 @@ const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json(product);
 });
 
-export { createProduct, deleteProduct, getProductById, getAllProducts, updateProduct };
+const createManyProducts = asyncHandler(async (req: Request, res: Response) => {
+  const products = await productService.createManyProducts(req.body);
+  res.status(201).json(products);
+});
+
+export { createProduct, deleteProduct, getProductById, getAllProducts, updateProduct, createManyProducts };

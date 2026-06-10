@@ -82,11 +82,19 @@ export class ProductService {
     return await this.updateProduct(productId, { variants });
   }
 
+  async createManyProducts(productsData: IProduct[]): Promise<IProduct[]> {
+    if (!Array.isArray(productsData) || productsData.length === 0) {
+      throw new AppError(400, 'Products body must be a non-empty array');
+    }
+    productsData.forEach(product => this.validateProduct(product));
+    return await this.productRepository.createMany(productsData);
+  }
+
   private validateProduct(productData: IProduct): void {
     this.validatePrice(productData.price);
     this.validateDiscount(productData.discountPercentage);
     this.validateRating(productData.rating);
-    this.validateVariants(productData.variants);
+    //this.validateVariants(productData.variants);
     this.validateRequiredList(productData.tags, 'Product must have at least one tag');
     this.validateRequiredList(productData.images, 'Product must have at least one image');
   }

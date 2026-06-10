@@ -3,6 +3,7 @@ import { HydratedDocument } from 'mongoose';
 import { asyncHandler } from '../middlewares/asyncHandler';
 import { IUser, User } from '../models/User';
 import { generateToken } from '../utils/generateToken';
+import { AppError } from '../common/exceptions/AppError';
 
 interface RegisterBody {
   userName: string;
@@ -51,14 +52,12 @@ export const loginUser: RequestHandler = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email) {
-    res.status(400);
-    throw new Error('Email or phone number is required');
+    throw new AppError(400, 'Email or phone number is required');
   }
 
   const user = await User.findOne({ $or: [{ email }, { phoneNumber: email }] });
   if (!user || !(await user.comparePassword(password))) {
-    res.status(401);
-    throw new Error('Invalid email/phone or password');
+    throw new AppError(401, 'Invalid email/phone or password');
   }
   res.status(200).json(buildAuthResponse(user));
 });

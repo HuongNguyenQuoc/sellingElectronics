@@ -27,4 +27,8 @@ export class ProductRepository {
   async delete(id: string): Promise<IProduct | null> {
     return await Product.findByIdAndDelete(id);
   }
+
+  async createMany(productsData: IProduct[]): Promise<IProduct[]> {
+    return await Product.insertMany(productsData);
+  }
 }

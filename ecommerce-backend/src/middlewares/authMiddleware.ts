@@ -41,7 +41,7 @@ const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
   return next(new AppError(401, 'No token, authorization denied'));
 };
 
-const admin = (req: AuthRequest, res: Response, next: NextFunction) => {
+const admin = (req: AuthRequest, _res: Response, next: NextFunction) => {
   if (req.user && req.user.role === 'admin') {
     return next();
   } else {

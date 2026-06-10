@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import api from "../../api/axiosConfig";
+
+const getErrorMessage = (error, fallback) => {
+  return error.response?.data?.message || fallback;
+};
 
 const AdminAddProduct = () => {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   // --- STATE QUẢN LÝ DỮ LIỆU FORM ---
   const [title, setTitle] = useState("");
@@ -77,8 +84,9 @@ const AdminAddProduct = () => {
   };
 
   // --- LOGIC KIỂM TRA VÀ LƯU SẢN PHẨM ---
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     // Kiểm tra thủ công các trường mảng/danh sách (HTML required không kiểm tra được mảng)
     if (tags.length === 0) {
@@ -86,9 +94,11 @@ const AdminAddProduct = () => {
       return;
     }
 
-    const finalColors = variants.map(v => v.color.trim()).filter(c => c !== "");
-    const finalStock = variants.map(v => v.stock.trim()).filter(s => s !== "");
-    if (finalColors.length !== variants.length || finalStock.length !== variants.length) {
+    const finalVariants = variants.map((variant) => ({
+      color: variant.color.trim(),
+      stock: Number(variant.stock),
+    }));
+    if (finalVariants.some((variant) => !variant.color || Number.isNaN(variant.stock))) {
       alert("Vui lòng điền đầy đủ thông tin Tên màu và Số lượng kho cho tất cả các dòng phân loại!");
       return;
     }
@@ -101,27 +111,32 @@ const AdminAddProduct = () => {
 
     // Đóng gói dữ liệu chuẩn cấu trúc Database
     const newProduct = {
-      id: Date.now().toString(),
-      title,
-      description,
-      colors: finalColors,
+      title: title.trim(),
+      description: description.trim(),
+      variants: finalVariants,
       price: Number(price),
       discountPercentage: Number(discountPercentage),
       rating: Number(rating),
-      stock: finalStock.map(Number),
       tags,
-      brandName: brandName.toUpperCase(),
+      brandName: brandName.trim().toUpperCase(),
       weight: Number(weight),
-      dimensions: { first: dimFirst, second: dimSecond },
-      warrantyInformation,
+      dimensions: { first: dimFirst.trim(), second: dimSecond.trim() },
+      warrantyInformation: warrantyInformation.trim(),
       reviews: [],
       images: finalImages,
-      thumbnail,
+      thumbnail: thumbnail.trim(),
     };
 
-    console.log("Cục dữ liệu sản phẩm hoàn chỉnh đã sẵn sàng:", newProduct);
-    alert("Thêm sản phẩm thành công! Hãy kiểm tra tab Console F12 để xem cấu trúc dữ liệu.");
-    navigate("/admin/products");
+    try {
+      setIsSubmitting(true);
+      await api.post("/products", newProduct);
+      alert("Thêm sản phẩm thành công!");
+      navigate("/admin/products");
+    } catch (err) {
+      setError(getErrorMessage(err, "Thêm sản phẩm thất bại. Hãy kiểm tra token admin hoặc dữ liệu nhập."));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400 transition-all text-gray-800";
@@ -145,11 +160,17 @@ const AdminAddProduct = () => {
           <Link to="/admin/products" className="px-5 py-2.5 rounded-xl font-bold text-sm bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all">
             Hủy bỏ
           </Link>
-          <button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm">
-            Lưu sản phẩm
+          <button type="submit" disabled={isSubmitting} className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+            {isSubmitting ? "Đang lưu..." : "Lưu sản phẩm"}
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* CHIA LÀM 2 CỘT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,11 +1,35 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
-// Import nguồn dữ liệu gốc để truy vấn sản phẩm cần sửa
-import { dummyAll } from "../../data/mockData";
+import api from "../../api/axiosConfig";
+
+const getErrorMessage = (error, fallback) => {
+  return error.response?.data?.message || fallback;
+};
+
+const getEditableVariants = (product) => {
+  if (Array.isArray(product.variants) && product.variants.length > 0) {
+    return product.variants.map((variant) => ({
+      color: variant.color || "",
+      stock: variant.stock?.toString() || "0",
+    }));
+  }
+
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+  const stock = Array.isArray(product.stock) ? product.stock : [];
+
+  return colors.map((color, index) => ({
+    color,
+    stock: stock[index]?.toString() || "0",
+  }));
+};
 
 const AdminEditProduct = () => {
   const { id } = useParams(); // Lấy ID sản phẩm từ URL (VD: /admin/products/edit/14)
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+  const [error, setError] = useState("");
 
   // --- STATE QUẢN LÝ DỮ LIỆU FORM ---
   const [title, setTitle] = useState("");
@@ -37,46 +61,44 @@ const AdminEditProduct = () => {
 
   // --- HOOK EFFECT: TỰ ĐỘNG LOAD DATA KHI VÀO TRANG ---
   useEffect(() => {
-    // Tìm sản phẩm có ID trùng với ID trên thanh URL
-    const product = dummyAll.find((p) => p.id === id);
+    const fetchProduct = async () => {
+      try {
+        setIsLoading(true);
+        setCanEdit(false);
+        setError("");
+        const { data: product } = await api.get(`/products/${id}`);
 
-    if (product) {
-      // Đổ dữ liệu thô vào các State tương ứng
-      setTitle(product.title || "");
-      setDescription(product.description || "");
-      setBrandName(product.brandName || "");
-      setRating(product.rating?.toString() || "0");
-      setDiscountPercentage(product.discountPercentage?.toString() || "0");
-      
-      // Xử lý giá tiền
-      setPrice(product.price?.toString() || "");
-      setDisplayPrice(product.price ? Number(product.price).toLocaleString("vi-VN") : "");
-      
-      // Xử lý hình ảnh
-      setThumbnail(product.thumbnail || "");
-      setImages(product.images && product.images.length > 0 ? product.images : [""]);
-      
-      // Xử lý thông số kỹ thuật
-      setWeight(product.weight?.toString() || "");
-      setDimFirst(product.dimensions?.first || "");
-      setDimSecond(product.dimensions?.second || "");
-      setWarrantyInformation(product.warrantyInformation || "");
-      
-      // Xử lý mảng màu sắc và tồn kho song song gộp lại thành Variant Object
-      const colorsArray = product.colors || [];
-      const stockArray = product.stock || [];
-      const mappedVariants = colorsArray.map((color, index) => ({
-        color: color,
-        stock: stockArray[index]?.toString() || "0"
-      }));
-      
-      setVariants(mappedVariants.length > 0 ? mappedVariants : [{ color: "", stock: "" }]);
-      setTags(product.tags || []);
-    } else {
-      alert("Không tìm thấy sản phẩm này trong hệ thống!");
-      navigate("/admin/products");
-    }
-  }, [id, navigate]);
+        setTitle(product.title || "");
+        setDescription(product.description || "");
+        setBrandName(product.brandName || "");
+        setRating(product.rating?.toString() || "0");
+        setDiscountPercentage(product.discountPercentage?.toString() || "0");
+
+        setPrice(product.price?.toString() || "");
+        setDisplayPrice(product.price ? Number(product.price).toLocaleString("vi-VN") : "");
+
+        setThumbnail(product.thumbnail || "");
+        setImages(product.images && product.images.length > 0 ? product.images : [""]);
+
+        setWeight(product.weight?.toString() || "");
+        setDimFirst(product.dimensions?.first || "");
+        setDimSecond(product.dimensions?.second || "");
+        setWarrantyInformation(product.warrantyInformation || "");
+
+        const mappedVariants = getEditableVariants(product);
+        setVariants(mappedVariants.length > 0 ? mappedVariants : [{ color: "", stock: "" }]);
+        setTags(product.tags || []);
+        setCanEdit(true);
+      } catch (err) {
+        setError(getErrorMessage(err, "Không tìm thấy sản phẩm này trong hệ thống."));
+        setCanEdit(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   // --- HÀM XỬ LÝ ĐỊNH DẠNG SỐ TIỀN KHI GÕ ---
   const handlePriceChange = (e) => {
@@ -125,8 +147,9 @@ const AdminEditProduct = () => {
   };
 
   // --- LOGIC CẬP NHẬT SẢN PHẨM ---
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     // Khối Validation nghiêm ngặt
     if (tags.length === 0) {
@@ -134,9 +157,11 @@ const AdminEditProduct = () => {
       return;
     }
 
-    const finalColors = variants.map(v => v.color.trim()).filter(c => c !== "");
-    const finalStock = variants.map(v => v.stock.trim()).filter(s => s !== "");
-    if (finalColors.length !== variants.length || finalStock.length !== variants.length) {
+    const finalVariants = variants.map((variant) => ({
+      color: variant.color.trim(),
+      stock: Number(variant.stock),
+    }));
+    if (finalVariants.some((variant) => !variant.color || Number.isNaN(variant.stock))) {
       alert("Vui lòng điền đầy đủ thông tin Tên màu và Số lượng kho!");
       return;
     }
@@ -149,27 +174,31 @@ const AdminEditProduct = () => {
 
     // Đóng gói dữ liệu chỉnh sửa cập nhật (Giữ nguyên ID cũ)
     const updatedProduct = {
-      id: id, 
-      title,
-      description,
-      colors: finalColors,
+      title: title.trim(),
+      description: description.trim(),
+      variants: finalVariants,
       price: Number(price),
       discountPercentage: Number(discountPercentage),
       rating: Number(rating),
-      stock: finalStock.map(Number),
       tags,
-      brandName: brandName.toUpperCase(),
+      brandName: brandName.trim().toUpperCase(),
       weight: Number(weight),
-      dimensions: { first: dimFirst, second: dimSecond },
-      warrantyInformation,
-      reviews: [], 
+      dimensions: { first: dimFirst.trim(), second: dimSecond.trim() },
+      warrantyInformation: warrantyInformation.trim(),
       images: finalImages,
-      thumbnail,
+      thumbnail: thumbnail.trim(),
     };
 
-    console.log("Cục dữ liệu sau khi sửa đổi thành công:", updatedProduct);
-    alert(`Cập nhật thành công sản phẩm: ${title}`);
-    navigate("/admin/products");
+    try {
+      setIsSubmitting(true);
+      await api.put(`/products/${id}`, updatedProduct);
+      alert(`Cập nhật thành công sản phẩm: ${title}`);
+      navigate("/admin/products");
+    } catch (err) {
+      setError(getErrorMessage(err, "Cập nhật sản phẩm thất bại. Hãy kiểm tra token admin hoặc dữ liệu nhập."));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400 transition-all text-gray-800";
@@ -193,14 +222,26 @@ const AdminEditProduct = () => {
           <Link to="/admin/products" className="px-5 py-2.5 rounded-xl font-bold text-sm bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all">
             Hủy bỏ
           </Link>
-          <button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm">
-            Cập nhật sản phẩm
+          <button type="submit" disabled={isLoading || isSubmitting || !canEdit} className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+            {isSubmitting ? "Đang cập nhật..." : "Cập nhật sản phẩm"}
           </button>
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {error}
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-6 text-center text-sm font-medium text-gray-500">
+          Đang tải dữ liệu sản phẩm...
+        </div>
+      )}
+
       {/* THÂN GRID FORM */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {!isLoading && canEdit && <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* CỘT TRÁI */}
         <div className="lg:col-span-2 space-y-6">
@@ -356,7 +397,7 @@ const AdminEditProduct = () => {
           </div>
         </div>
 
-      </div>
+      </div>}
     </form>
   );
 };
