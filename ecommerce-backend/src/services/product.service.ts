@@ -94,7 +94,7 @@ export class ProductService {
     this.validatePrice(productData.price);
     this.validateDiscount(productData.discountPercentage);
     this.validateRating(productData.rating);
-    //this.validateVariants(productData.variants);
+    this.validateVariants(productData.variants);
     this.validateRequiredList(productData.tags, 'Product must have at least one tag');
     this.validateRequiredList(productData.images, 'Product must have at least one image');
   }
@@ -122,7 +122,7 @@ export class ProductService {
 
   private validatePrice(price: number): void {
     if (price < 0) {
-      throw new AppError(400, 'Price must be a positive number');
+      throw new AppError(400, 'Price cannot be negative');
     }
   }
 
@@ -151,21 +151,31 @@ export class ProductService {
 
     const colors = variants.map(variant => variant.color.trim().toLowerCase());
     const uniqueColors = new Set(colors);
+    /* A 'Set' stores only unique values
+    Example: new Set(["black", "black", "white"])
+    The result contains only:
+    "black", "white"
+    */
 
     if (uniqueColors.size !== colors.length) {
       throw new AppError(400, 'Product variant colors must be unique');
-    }
+    } // Yes, I do
 
     if (variants.some(variant => !variant.color.trim())) {
+      /* This checks if any variant has an empty color.
+      some() returns true if at least one item matches the condition.*/
       throw new AppError(400, 'Variant color is required');
     }
 
     if (variants.some(variant => variant.stock < 0)) {
-      throw new AppError(400, 'Stock must be a positive number');
+      throw new AppError(400, 'Stock cannot be negative');
     }
   }
 
-  private validateRequiredList<T>(value: T[], message: string): void {
+  private validateRequiredList<T>(value: T[], message: string): void { // Here T is a generic type so important in TypeScripts bro, you just have to deal with it, okay?
+    // And it means this function can work with any array type or I don't know what type the array contains yet.
+    // TypeScript will decide it when the function is called. Example: T is string so string[] or number[] or even
+    // IProductVariant[]
     if (!Array.isArray(value) || value.length === 0) {
       throw new AppError(400, message);
     }
