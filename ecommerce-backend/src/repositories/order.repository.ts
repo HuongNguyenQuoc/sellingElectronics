@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { IOrder, Order } from '../models/Order';
+import { ShippingAddressDto } from '../dtos/order.dto';
 
 export class OrderRepository {
   // Get all order
@@ -10,12 +11,12 @@ export class OrderRepository {
 
   // Get order follow by ID
   async findById(id: string): Promise<IOrder | null> {
-    return await Order.findById(id).populate('user').populate('items.product');
+    return await Order.findById(id).populate('items.product');
   }
 
   // Get orders of 1 user
   async findByUserId(userId: string): Promise<IOrder[]> {
-    return await Order.find({ user: userId }).populate('items.product');
+    return await Order.find({ userId: userId }).populate('items.product');
   }
 
   // Create new order
@@ -23,17 +24,18 @@ export class OrderRepository {
     userId: string;
     items: any[];
     paymentMethod: string;
+    shippingAddress: any;
     totalCost: number;
   }): Promise<IOrder> {
     return await Order.create(orderData);
   }
 
   // Update order (status, shipping address)
-  async update(id: string, updateData: Partial<IOrder>): Promise<IOrder | null> {
-    return await Order.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    }).populate('items.product');
+  async updateStatus(id: string, status: string) {
+    return await Order.findByIdAndUpdate(
+      id, { status },
+      { new: true, runValidators: true }
+    ).populate('items.product');
   }
 
   // Delete Order

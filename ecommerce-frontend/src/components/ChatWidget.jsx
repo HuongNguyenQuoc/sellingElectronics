@@ -1,19 +1,67 @@
+import { io } from "socket.io-client";
+
 import { useState, useEffect } from "react";
 import { dummyMessages } from "../data/mockData"; // Import dữ liệu từ mockData
 import OrderCard from "./OrderCard"; // Đảm bảo đường dẫn này đúng với nơi bạn lưu OrderCard
+import api from '../../api/axiosConfig'
 
-const ChatWidget = () => {
+const socket = io("http://localhost:3000");
+
+const ChatWidget = async() => {
   const [isOpen, setIsOpen] = useState(false);
-  // Khởi tạo state bằng dữ liệu lấy từ mockData
-  const [messages, setMessages] = useState(dummyMessages);
+  const [messages, setMessages] = useState([]);
+
+  const [inputMessage, setInputMessage] = useState("");
+  const currentUser = JSON.parse(
+        localStorage.getItem("user")
+      );
+
+  const res = await api.get(`/messages/${currentUser._id}`);
+  setMessages(res.data);
+
 
   // Lắng nghe sự kiện 'toggleChat' từ bất cứ đâu
   useEffect(() => {
-    const handleToggleChat = () => setIsOpen((prev) => !prev);
-    window.addEventListener("toggleChat", handleToggleChat);
+    if (!currentUser) return;
 
-    return () => window.removeEventListener("toggleChat", handleToggleChat);
+    socket.emit("john_room", {
+      userId: currentUser._id
+    });
+
+    socket.on("receive_message", (message) => {
+      setMessages((prev) => [...prev, message]);
+    });
+
+    socket.on("message_sent", (message) => {
+      setMessages((prev) => [...prev, message]);
+    });
+
+    socket.on("message_error", (error) => {
+      console.error(error);
+    });
+
+    return () => {
+      socket.off("receive_message");
+      socket.off("message_sent");
+      socket.off("message_error");
+    };
   }, []);
+
+  //send message
+  const handleSendMessage = () => {
+    if (!inputMessage.trim()) return;
+    if (!currentUser) return;
+
+    const messagePayload = {
+      senderId: currentUser._id,
+      receiverId: "admin",
+      content: inputMessage
+    };
+
+    socket.emit("send_message", messagePayload);
+
+    setInputMessage("");
+  };
 
   return (
     <>
@@ -58,7 +106,7 @@ const ChatWidget = () => {
               const isAdmin = msg.senderId === "admin";
 
               return (
-                <div key={msg.messageId} className={`flex gap-2 ${isAdmin ? "items-end" : "justify-end mt-1"}`}>
+                <div key={msg._id} className={`flex gap-2 ${isAdmin ? "items-end" : "justify-end mt-1"}`}>
                   
                   {/* Avatar Admin (Chỉ hiển thị nếu là admin gửi) */}
                   {isAdmin && (
@@ -70,17 +118,17 @@ const ChatWidget = () => {
                   <div className={`max-w-[85%] ${!isAdmin ? "bg-gray-900 text-white p-3 rounded-2xl rounded-br-sm shadow-md text-[14px]" : ""}`}>
                     
                     {/* TRƯỜNG HỢP 1: TIN NHẮN CHỮ */}
-                    {msg.type === "text" && isAdmin && (
+                    {msg.content && isAdmin && (
                       <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-sm text-[14px] text-gray-800 shadow-sm">
                         {msg.content}
                       </div>
                     )}
-                    {msg.type === "text" && !isAdmin && (
+                    {msg.content && !isAdmin && (
                       <span>{msg.content}</span>
                     )}
 
                     {/* TRƯỜNG HỢP 2: TIN NHẮN ĐƠN HÀNG */}
-                    {msg.type === "order" && msg.orderData && (
+                    {msg.orderData && (
                       <OrderCard 
                         checkoutItems={msg.orderData.checkoutItems} 
                         totalAmount={msg.orderData.totalAmount} 
@@ -98,10 +146,17 @@ const ChatWidget = () => {
               <input
                 type="text"
                 placeholder="Nhập tin nhắn..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSendMessage();
+                }}
                 className="bg-transparent flex-1 focus:outline-none text-[14px] text-gray-700"
               />
             </div>
-            <button className="w-9 h-9 flex items-center justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full transition-transform hover:scale-110 shadow-sm shrink-0">
+            <button 
+              onClick={handleSendMessage}
+              className="w-9 h-9 flex items-center justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full transition-transform hover:scale-110 shadow-sm shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 ml-0.5">
                 <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
               </svg>

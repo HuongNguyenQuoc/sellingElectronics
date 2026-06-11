@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 
+import axios from 'axios'
+import api from '../../api/axiosConfig'
+
 const CheckoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -24,7 +27,7 @@ const CheckoutPage = () => {
   };
 
   // Hàm xử lý Đặt hàng
-  const handleOrder = () => {
+  const handleOrder = async() => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Vui lòng nhập họ tên người nhận";
     if (!formData.phone.trim()) newErrors.phone = "Vui lòng nhập số điện thoại";
@@ -34,6 +37,23 @@ const CheckoutPage = () => {
       setErrors(newErrors);
       return;
     }
+
+    await api.post("/orders", {
+      items: checkoutItems.map((item) => ({
+        productId: item.productId,
+        image: item.thumbnail,
+        quantity: item.quantity,
+        price: item.price,
+        colorSelected: item.colorSelected
+      })),
+      shippingAddress: {
+        fullName: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        city: "Ha Noi" // bin
+      },
+      paymentMethod: "COD"
+    });
 
     // Nếu không có lỗi -> Hiển thị Popup thành công
     setIsSuccess(true);

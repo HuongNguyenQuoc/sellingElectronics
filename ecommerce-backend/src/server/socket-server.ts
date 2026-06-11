@@ -23,10 +23,16 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_message', async (data: SendMessageDto) => {
-
-    const messageData = await sendMessageService(data)
-    // Emit the message to the receiver's room
-    io.to(data.receiverId).emit('receive_message',messageData);
+      try{
+        const messageData = await sendMessageService(data)
+        // Emit the message to the receiver's room
+        io.to(data.receiverId).emit('receive_message',messageData);
+        socket.emit('message_sent',messageData);
+      }catch(error){
+        socket.emit('message_error',{
+          message:'Send message failed'
+        });
+      }
   });
 
   socket.on('disconnect', () => {
@@ -35,6 +41,6 @@ io.on('connection', (socket) => {
 
 });
 
-server.listen(8080, () => {
+server.listen(3000, () => {
   console.log('Socket.IO server is running on port 8080');
 });

@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 
 export interface ICheckoutItem {
+    productId:string;
     title: string;
     thumbnail: string;
     colorSelected: string;
@@ -9,6 +10,10 @@ export interface ICheckoutItem {
 }
 
 export const CheckoutItemSchema = new Schema<ICheckoutItem>({
+    productId:{
+        type:String,
+        required:true
+    },
     title: {
         type: String,
         required: true

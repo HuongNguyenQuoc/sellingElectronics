@@ -11,9 +11,11 @@ export const sendMessageService = async (dto: SendMessageDto) => {
         senderId: dto.senderId,
         receiverId: dto.receiverId,
         content: dto.content,
-        type: dto.type, // "ask", "shipped"
-        productId: dto.productId,
         orderData: dto.orderData
     }
     return messageRepository.createMessage(message);
+}
+
+export const getAllMessagesService = async(roomId:string) => {
+    return messageRepository.getAllMessages(roomId)
 }

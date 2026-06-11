@@ -1,12 +1,36 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { dummyAll, mockOrders } from "../../data/mockData";
 
+import { useState, useEffect } from "react";
+
+import axios from 'axios'
+import api from '../../api/axiosConfig'
+
 const OrderDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Tìm đơn hàng tương ứng với ID trên URL
-  const order = mockOrders.find((o) => o.orderId === id);
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+  const fetchOrder = async () => {
+    try {
+      setLoading(true);
+
+      const res = await api.get(`/orders/${id}`);
+
+      setOrder(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchOrder();
+  }, [id]);
+
 
   // Nếu không tìm thấy đơn hàng
   if (!order) {
@@ -21,15 +45,6 @@ const OrderDetails = () => {
     );
   }
 
-  // Lấy chi tiết sản phẩm
-  const getProductDetails = (productId) => {
-    const product = dummyAll.find((p) => p.id === productId);
-    return product ? {
-      title: product.title,
-      price: product.price,
-      thumbnail: product.thumbnail || product.images?.[0]
-    } : { title: "Sản phẩm không tồn tại", price: 0, thumbnail: "https://placehold.co/100x100?text=No+Image" };
-  };
 
   // Cấu hình Timeline Trạng thái
   const STEPS = [
@@ -41,14 +56,14 @@ const OrderDetails = () => {
 
   // Xác định bước hiện tại
   let currentStepIndex = 0;
-  if (order.orderStatus === "PROCESSING") currentStepIndex = 1;
-  if (order.orderStatus === "SHIPPED") currentStepIndex = 2;
-  if (order.orderStatus === "DELIVERED") currentStepIndex = 3;
+  if (order.status === "PROCESSING") currentStepIndex = 1;
+  if (order.status === "SHIPPED") currentStepIndex = 2;
+  if (order.status === "DELIVERED") currentStepIndex = 3;
 
-  const isCancelled = order.orderStatus === "CANCELLED";
+  const isCancelled = order.status === "CANCELLED";
 
   // Định dạng thời gian
-  const formattedOrderDate = new Date(order.orderDate).toLocaleString("vi-VN", {
+  const formattedOrderDate = new Date(order.createdAt).toLocaleString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",
@@ -73,7 +88,7 @@ const OrderDetails = () => {
           </button>
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Mã đơn hàng:</span>
-            <span className="text-lg font-bold text-gray-900 uppercase">{order.orderId}</span>
+            <span className="text-lg font-bold text-gray-900 uppercase">{order._id}</span>
             <span className="text-gray-300">|</span>
             <span className={`text-sm font-bold uppercase tracking-wide ${isCancelled ? "text-red-600" : "text-[#e30019]"}`}>
               {isCancelled ? "Đã hủy" : STEPS[currentStepIndex].label}
@@ -154,9 +169,9 @@ const OrderDetails = () => {
                 Địa chỉ nhận hàng
               </h3>
               <div className="space-y-1.5 pl-7">
-                <p className="font-semibold text-gray-900">{order.fullName}</p>
-                <p className="text-sm text-gray-600">{order.phone}</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{order.shippingAddress}</p>
+                <p className="font-semibold text-gray-900">{order.shippingAddress?.fullName}</p>
+                <p className="text-sm text-gray-600">{order.shippingAddress?.phone}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{order.shippingAddress?.address}, {order.shippingAddress?.city}</p>
               </div>
             </div>
 
@@ -179,17 +194,16 @@ const OrderDetails = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             {/* Danh sách Item */}
             <div className="p-6 space-y-6">
-              {order.itemIds.map((item, index) => {
-                const productInfo = getProductDetails(item.product);
+              {order.items.map((item, index) => {
                 return (
                   <div key={index} className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                    <Link to={`/product/${item.product}`} className="w-20 h-20 bg-white border border-gray-200 rounded-lg p-1.5 flex-shrink-0 hover:border-gray-300 transition-colors">
-                      <img src={productInfo.thumbnail} alt={productInfo.title} className="w-full h-full object-contain" />
+                    <Link to={`/product/${item.product._id}`} className="w-20 h-20 bg-white border border-gray-200 rounded-lg p-1.5 flex-shrink-0 hover:border-gray-300 transition-colors">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
                     </Link>
                     
                     <div className="flex-1 min-w-0">
-                      <Link to={`/product/${item.product}`} className="text-[15px] font-semibold text-gray-900 hover:text-[#e30019] line-clamp-2 transition-colors">
-                        {productInfo.title}
+                      <Link to={`/product/${item.product._id}`} className="text-[15px] font-semibold text-gray-900 hover:text-[#e30019] line-clamp-2 transition-colors">
+                        {item.name}
                       </Link>
                       <div className="flex flex-wrap items-center gap-4 mt-1.5 text-sm text-gray-500">
                         <span>Phân loại: {item.colorSelected}</span>
@@ -198,7 +212,7 @@ const OrderDetails = () => {
                     </div>
                     
                     <div className="text-[15px] font-semibold text-gray-900 sm:text-right w-full sm:w-auto mt-2 sm:mt-0 border-t sm:border-t-0 border-gray-100 pt-4 sm:pt-0">
-                      {(productInfo.price * item.quantity).toLocaleString("vi-VN")} ₫
+                      {(item.price * item.quantity).toLocaleString("vi-VN")} ₫
                     </div>
                   </div>
                 );
@@ -210,7 +224,7 @@ const OrderDetails = () => {
               <div className="w-full sm:w-80 space-y-3 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Tổng tiền hàng</span>
-                  <span className="font-medium text-gray-900">{order.totalAmount.toLocaleString("vi-VN")} ₫</span>
+                  <span className="font-medium text-gray-900">{order.totalCost.toLocaleString("vi-VN")} ₫</span>
                 </div>
                 <div className="flex justify-between text-gray-600 pb-3 border-b border-gray-200">
                   <span>Phí vận chuyển</span>
@@ -218,7 +232,7 @@ const OrderDetails = () => {
                 </div>
                 <div className="flex justify-between items-center pt-1">
                   <span className="font-semibold text-gray-900">Thành tiền</span>
-                  <span className="text-2xl font-bold text-[#e30019]">{order.totalAmount.toLocaleString("vi-VN")} ₫</span>
+                  <span className="text-2xl font-bold text-[#e30019]">{order.totalCost.toLocaleString("vi-VN")} ₫</span>
                 </div>
               </div>
             </div>

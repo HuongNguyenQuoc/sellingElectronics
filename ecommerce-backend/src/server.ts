@@ -5,10 +5,20 @@ they are on different domains or ports.*/
 import dotenv from 'dotenv'; // Used to load environment variables from a .env file into process.env
 import express, { type Express, type Request, type Response } from 'express';
 
+
+import orderRoutes from './routes/orderRoutes';
+
 import { connectDB } from './config/db';
 import { errorHandler, notFound } from './middlewares/errorMiddleware';
 import authRoutes from './routes/authRoutes';
 import productRoutes from './routes/productRoutes';
+
+import dns from 'dns';
+
+dns.setServers([
+  '8.8.8.8',
+  '8.8.4.4'
+]);
 
 dotenv.config();
 // Load environment variables from .env file into process.env . Ex: console.log(process.env.MONGO_URI) to check if it's loaded correctly
@@ -24,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/products', productRoutes);
 app.use('/api/users', authRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.get('/', (_req: Request, res: Response) => {
   // _req is a convention to indicate that the request parameter

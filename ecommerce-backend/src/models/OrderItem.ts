@@ -7,6 +7,7 @@ export interface IOrderItem {
     image?: string;
     quantity: number;
     price: number; // Price when purchase
+    colorSelected:string
 }
 
 export const OrderItemSchema = new mongoose.Schema<IOrderItem>({
@@ -31,6 +32,10 @@ export const OrderItemSchema = new mongoose.Schema<IOrderItem>({
         type: Number,
         required: true,
         min: 0 
+    },
+    colorSelected:{
+        type: String,
+        required: true
     }
 });
 

@@ -3,19 +3,19 @@ export interface OrderItemDto {
   image?: string;
   quantity: number;
   price: number; // Price at the time order
+  colorSelected:string
 }
 
 // Address in order
 export interface ShippingAddressDto {
-  street: string;
-  city: string;
-  postalCode: string;
-  country: string;
+  fullName: string;
+    phone: string;
+    address: string;
+    city: string;
 }
 
 // Use for Create Order
 export interface CreateOrderDto {
-  userId: string;
   items: OrderItemDto[];
   shippingAddress: ShippingAddressDto;
   paymentMethod: string; // "credit-card", "paypal",...

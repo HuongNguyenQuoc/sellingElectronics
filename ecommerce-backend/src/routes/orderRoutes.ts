@@ -1,20 +1,20 @@
-import route from 'express';
-const router = route.Router();
-const { createOrder, getAllOrders, getOrderById ,updateOrderStatus } = require('../controllers/orderController');
+import { Router } from 'express';
+import { createOrder, getAllOrders, getOrderById ,updateOrderStatus } from '../controllers/orderController';
 
+import { protect } from '../middlewares/authMiddleware';
 
-// TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOO: Đang test nên chưa qua middleware
+const router = Router();
 
 // Create a new order
-router.post('/', createOrder);
+router.post('/', protect, createOrder);
 
 // Get all orders
-router.get('/my-orders', getAllOrders);
+router.get('/my-orders', protect, getAllOrders);
 
 // Get a specific order
-router.get('/:id', getOrderById);
+router.get('/:id', protect, getOrderById);
 
 // Update order status
-router.patch('/:id/status',updateOrderStatus);
+router.patch('/:id/status',protect,updateOrderStatus);
 
-module.exports = router;
+export default router;

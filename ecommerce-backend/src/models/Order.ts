@@ -8,7 +8,7 @@ export interface IOrder{
     userId: string;
     items: IOrderItem[];
     shippingAddress: IShippingAddress;
-    status: OrderStatus;       
+    status: OrderStatus;      
     paymentMethod: string;    // NOTEEEEEEEEEEEEEE
     totalCost: number;         
 }
@@ -23,11 +23,16 @@ const OrderSchema = new Schema<IOrder>({
     status: { 
         type: String,
         enum: Object.values(OrderStatus),
-        default: OrderStatus.PENDING
+        default: OrderStatus.PROCESSING
     },
     paymentMethod: {
         type: String,
         required: true
+    },
+    totalCost:{
+        type: Number,
+        required:true,
+        default:0
     }
 }, {
     timestamps: true
