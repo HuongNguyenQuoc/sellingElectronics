@@ -3,11 +3,11 @@ import { io } from "socket.io-client";
 import { useState, useEffect } from "react";
 import { dummyMessages } from "../data/mockData"; // Import dữ liệu từ mockData
 import OrderCard from "./OrderCard"; // Đảm bảo đường dẫn này đúng với nơi bạn lưu OrderCard
-import api from '../../api/axiosConfig'
+import api from '../api/axiosConfig'
 
-const socket = io("http://localhost:3000");
+const socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:3000");
 
-const ChatWidget = async() => {
+const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
 
@@ -16,16 +16,46 @@ const ChatWidget = async() => {
         localStorage.getItem("user")
       );
 
-  const res = await api.get(`/messages/${currentUser._id}`);
-  setMessages(res.data);
+
+  //get old messages
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(`/messages/${currentUser._id}`);
+        console.log("res.data =", res.data);
+        setMessages(res.data);
+      } catch (err) {
+        console.error("Fetch messages error:", err);
+      }
+    };
+
+    fetchMessages();
+  }, [currentUser?._id]);
 
 
   // Lắng nghe sự kiện 'toggleChat' từ bất cứ đâu
   useEffect(() => {
     if (!currentUser) return;
 
+    if (!socket.connected) {
+      socket.connect();
+    }
+
     socket.emit("john_room", {
       userId: currentUser._id
+    });
+
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+      socket.emit("john_room", {
+        userId: currentUser._id
+      });
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket connect error:", error.message);
     });
 
     socket.on("receive_message", (message) => {
@@ -41,6 +71,8 @@ const ChatWidget = async() => {
     });
 
     return () => {
+      socket.off("connect");
+      socket.off("connect_error");
       socket.off("receive_message");
       socket.off("message_sent");
       socket.off("message_error");
@@ -53,12 +85,14 @@ const ChatWidget = async() => {
     if (!currentUser) return;
 
     const messagePayload = {
+      conversationId: currentUser._id,
       senderId: currentUser._id,
       receiverId: "admin",
       content: inputMessage
     };
 
     socket.emit("send_message", messagePayload);
+    console.log("send_message emitted:", messagePayload);
 
     setInputMessage("");
   };

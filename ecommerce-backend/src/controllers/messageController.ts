@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import { getAllMessagesService } from '../services/message.service';
+import { getAllMessagesService, sendMessageService } from '../services/message.service';
 
 export const getAllMessages = async (req: AuthRequest, res: Response) => {
   try {
@@ -11,8 +11,8 @@ export const getAllMessages = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const result = await getAllMessagesService(req.user._id.toString());
+    const result = await getAllMessagesService(req.params.id.toString());
     res.status(201).json(result);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating order', error });
+    res.status(500).json({ message: 'Error get Messages', error });
   }};

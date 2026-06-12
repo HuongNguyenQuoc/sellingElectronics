@@ -5,4 +5,6 @@ import { protect } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-router.get('/',protect,getAllMessages)
+router.get('/:id',protect,getAllMessages);
+
+export default router;
