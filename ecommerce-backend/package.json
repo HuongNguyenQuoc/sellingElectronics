@@ -27,6 +27,7 @@
     "mongoose": "^9.6.2",
     "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.8.3",
     "typeorm": "^1.0.0",
     "zod": "^4.4.3"
   },
