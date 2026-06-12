@@ -1,23 +1,26 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
-import { dummyFlashDeals } from "../data/mockData";
+import { useProducts } from "../hooks/useProducts";
+import { getProductId, isDiscountedProduct } from "../utils/productUtils";
 
 const FlashDeals = () => {
   const [timeLeft, setTimeLeft] = useState(0);
+  const { products, isLoading, error } = useProducts();
 
-  // LOGIC ĐỒNG BỘ THỜI GIAN VỚI TRANG FLASH SALE CHI TIẾT
+  const flashDeals = useMemo(() => {
+    return products.filter(isDiscountedProduct).slice(0, 6);
+  }, [products]);
+
   useEffect(() => {
     const initTimer = () => {
       const storedEndTime = localStorage.getItem("flashSaleEndTime");
       const now = Date.now();
-      
-      // Nếu đã có mốc kết thúc và chưa qua thời gian đó
+
       if (storedEndTime && parseInt(storedEndTime) > now) {
         return parseInt(storedEndTime);
       }
-      
-      // Nếu chưa có hoặc đã hết giờ -> Đặt lại mốc 3 tiếng mới
+
       const newEndTime = now + 3 * 60 * 60 * 1000;
       localStorage.setItem("flashSaleEndTime", newEndTime);
       return newEndTime;
@@ -29,13 +32,12 @@ const FlashDeals = () => {
       const now = Date.now();
       let remaining = Math.floor((endTime - now) / 1000);
 
-      // Nếu đếm lùi về 0 thì tự động quay vòng lại 3 tiếng
       if (remaining <= 0) {
         endTime = now + 3 * 60 * 60 * 1000;
         localStorage.setItem("flashSaleEndTime", endTime);
         remaining = 3 * 60 * 60;
       }
-      
+
       setTimeLeft(remaining);
     }, 1000);
 
@@ -49,11 +51,9 @@ const FlashDeals = () => {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div className="bg-[#f8f9fa] rounded-3xl p-6 lg:p-8 border border-gray-200">
-        {/* Header Flash Deal */}
         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
           <div className="flex flex-wrap items-center gap-4 lg:gap-8">
             <h2 className="text-2xl font-black text-[#e30019] flex items-center gap-2 uppercase tracking-tight">
-              {/* Icon Tia Sét */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -69,7 +69,6 @@ const FlashDeals = () => {
               Flash Deals Chớp Nhoáng
             </h2>
 
-            {/* Bộ đếm ngược thời gian đồng bộ */}
             <div className="flex items-center gap-3 text-sm">
               <span className="text-gray-500 font-bold uppercase text-xs">
                 Hết hạn sau:
@@ -90,7 +89,6 @@ const FlashDeals = () => {
             </div>
           </div>
 
-          {/* NÚT CHUYỂN TRANG */}
           <Link
             to="/flash-sale"
             className="text-sm font-bold text-gray-500 hover:text-[#e30019] transition-colors flex items-center gap-1"
@@ -99,17 +97,30 @@ const FlashDeals = () => {
           </Link>
         </div>
 
-        {/* Lưới danh sách TỐI ĐA 6 SẢN PHẨM */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {dummyFlashDeals.slice(0, 6).map((item) => (
-            <Link 
-              to={`/product/${item.id}`} 
-              key={item.id} 
-              className="block"
-            >
-              <ProductCard product={item} />
-            </Link>
-          ))}
+          {isLoading ? (
+            <div className="col-span-full py-8 text-center text-gray-500">
+              Đang tải sản phẩm sale...
+            </div>
+          ) : error ? (
+            <div className="col-span-full py-8 text-center text-red-500">
+              {error}
+            </div>
+          ) : flashDeals.length > 0 ? (
+            flashDeals.map((item) => {
+              const productId = getProductId(item);
+
+              return (
+                <Link to={`/product/${productId}`} key={productId} className="block">
+                  <ProductCard product={item} />
+                </Link>
+              );
+            })
+          ) : (
+            <div className="col-span-full py-8 text-center text-gray-500">
+              Hiện chưa có sản phẩm giảm giá.
+            </div>
+          )}
         </div>
       </div>
     </section>

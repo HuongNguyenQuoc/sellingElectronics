@@ -1,16 +1,27 @@
-import { useState } from "react";
-import { Link } from "react-router-dom"; // 1. IMPORT THÊM LINK TẠI ĐÂY
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
-import { dummyPhones } from "../data/mockData";
+import { useProducts } from "../hooks/useProducts";
+import { getProductId } from "../utils/productUtils";
+
+const brandFilters = [
+  { label: "Tất cả", value: "ALL" },
+  { label: "iPhone", value: "IPHONE" },
+  { label: "Samsung", value: "SAMSUNG" },
+  { label: "Oppo", value: "OPPO" },
+];
 
 const FeaturedPhones = () => {
   const [activeFilter, setActiveFilter] = useState("ALL");
+  const { products: phones, isLoading, error } = useProducts("smartphone");
 
-  // ĐÃ SỬA: Đổi phone.brand thành phone.brandName để khớp với dữ liệu mới
-  const filteredPhones =
-    activeFilter === "ALL"
-      ? dummyPhones
-      : dummyPhones.filter((phone) => phone.brandName === activeFilter);
+  const filteredPhones = useMemo(() => {
+    if (activeFilter === "ALL") return phones.slice(0, 6);
+
+    return phones
+      .filter((phone) => phone.brandName?.toUpperCase() === activeFilter)
+      .slice(0, 6);
+  }, [activeFilter, phones]);
 
   const getButtonClass = (filterName) => {
     return activeFilter === filterName
@@ -26,46 +37,38 @@ const FeaturedPhones = () => {
         </h2>
 
         <div className="flex gap-2 text-sm">
-          <button
-            onClick={() => setActiveFilter("ALL")}
-            className={getButtonClass("ALL")}
-          >
-            Tất cả
-          </button>
-          <button
-            onClick={() => setActiveFilter("IPHONE")}
-            className={getButtonClass("IPHONE")}
-          >
-            iPhone
-          </button>
-          <button
-            onClick={() => setActiveFilter("SAMSUNG")}
-            className={getButtonClass("SAMSUNG")}
-          >
-            Samsung
-          </button>
-          <button
-            onClick={() => setActiveFilter("OPPO")}
-            className={getButtonClass("OPPO")}
-          >
-            Oppo
-          </button>
+          {brandFilters.map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              onClick={() => setActiveFilter(filter.value)}
+              className={getButtonClass(filter.value)}
+            >
+              {filter.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Render danh sách đã được lọc (filteredPhones) thay vì mảng gốc (dummyPhones) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {filteredPhones.length > 0 ? (
-          filteredPhones.map((item) => (
-            /* 2. BỌC LINK RA BÊN NGOÀI PRODUCT CARD */
-            <Link 
-              to={`/product/${item.id}`} 
-              key={item.id} 
-              className="block" // Thêm block để vùng bấm (click area) bao trọn thẻ
-            >
-              <ProductCard product={item} />
-            </Link>
-          ))
+        {isLoading ? (
+          <div className="col-span-full py-8 text-center text-gray-500">
+            Đang tải sản phẩm...
+          </div>
+        ) : error ? (
+          <div className="col-span-full py-8 text-center text-red-500">
+            {error}
+          </div>
+        ) : filteredPhones.length > 0 ? (
+          filteredPhones.map((item) => {
+            const productId = getProductId(item);
+
+            return (
+              <Link to={`/product/${productId}`} key={productId} className="block">
+                <ProductCard product={item} />
+              </Link>
+            );
+          })
         ) : (
           <div className="col-span-full py-8 text-center text-gray-500">
             Hiện chưa có sản phẩm nào thuộc hãng này.

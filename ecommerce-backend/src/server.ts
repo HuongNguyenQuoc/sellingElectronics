@@ -25,6 +25,7 @@ dns.setServers([
   '8.8.8.8',
   '8.8.4.4'
 ]);
+import cartRoutes from './routes/cartRoutes';
 
 dotenv.config();
 // Load environment variables from .env file into process.env . Ex: console.log(process.env.MONGO_URI) to check if it's loaded correctly
@@ -43,6 +44,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/carts', cartRoutes);
 
 app.get('/', (_req: Request, res: Response) => {
   // _req is a convention to indicate that the request parameter

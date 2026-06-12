@@ -1,100 +1,79 @@
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom"; // Nhập Link từ react-router-dom
-import { dummyAll } from "../../data/mockData";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import ProductCard from "../../components/ProductCard";
+import { useProducts } from "../../hooks/useProducts";
+import {
+  getProductId,
+  getUniqueBrands,
+  sortByPrice,
+} from "../../utils/productUtils";
+
+const priceRanges = [
+  { id: "under10", label: "Dưới 10 triệu", min: 0, max: 10000000 },
+  { id: "10to20", label: "Từ 10 - 20 triệu", min: 10000000, max: 20000000 },
+  { id: "20to30", label: "Từ 20 - 30 triệu", min: 20000000, max: 30000000 },
+  { id: "over30", label: "Trên 30 triệu", min: 30000000, max: 999999999 },
+];
 
 const LaptopsPage = () => {
-  // Đã đổi tag lọc thành "laptop"
-  const allLaptops = useMemo(() => {
-    return dummyAll.filter((item) => item.tags.includes("laptop"));
-  }, []);
-
-  const availableBrands = useMemo(() => {
-    const brands = allLaptops.map((laptop) => laptop.brandName);
-    return [...new Set(brands)];
-  }, [allLaptops]);
-
+  const { products: allLaptops, isLoading, error } = useProducts("laptop");
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedPrices, setSelectedPrices] = useState([]);
   const [sortOrder, setSortOrder] = useState("asc");
 
-  const priceRanges = [
-    { id: "under10", label: "Dưới 10 triệu", min: 0, max: 10000000 },
-    { id: "10to20", label: "Từ 10 - 20 triệu", min: 10000000, max: 20000000 },
-    { id: "20to30", label: "Từ 20 - 30 triệu", min: 20000000, max: 30000000 },
-    { id: "over30", label: "Trên 30 triệu", min: 30000000, max: 999999999 },
-  ];
+  const availableBrands = useMemo(() => getUniqueBrands(allLaptops), [allLaptops]);
 
   const handleBrandChange = (brand) => {
     setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+      prev.includes(brand) ? prev.filter((item) => item !== brand) : [...prev, brand],
     );
   };
 
   const handlePriceChange = (priceId) => {
     setSelectedPrices((prev) =>
-      prev.includes(priceId) ? prev.filter((p) => p !== priceId) : [...prev, priceId]
+      prev.includes(priceId)
+        ? prev.filter((item) => item !== priceId)
+        : [...prev, priceId],
     );
   };
 
   const filteredLaptops = useMemo(() => {
-    let result = allLaptops.filter((laptop) => {
-      const matchBrand = selectedBrands.length === 0 || selectedBrands.includes(laptop.brandName);
-      
+    const filtered = allLaptops.filter((laptop) => {
+      const matchBrand =
+        selectedBrands.length === 0 || selectedBrands.includes(laptop.brandName);
       const matchPrice =
         selectedPrices.length === 0 ||
         selectedPrices.some((priceId) => {
-          const range = priceRanges.find((r) => r.id === priceId);
-          return laptop.price >= range.min && laptop.price <= range.max;
+          const range = priceRanges.find((item) => item.id === priceId);
+          return (laptop.price || 0) >= range.min && (laptop.price || 0) <= range.max;
         });
 
       return matchBrand && matchPrice;
     });
 
-    result.sort((a, b) => {
-      if (sortOrder === "asc") return a.price - b.price;
-      if (sortOrder === "desc") return b.price - a.price;
-      return 0;
-    });
-
-    return result;
+    return sortByPrice(filtered, sortOrder);
   }, [allLaptops, selectedBrands, selectedPrices, sortOrder]);
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN").format(price) + "đ";
-  };
-
-  const getOriginalPrice = (price, discountPercentage) => {
-    if (!discountPercentage) return price;
-    return price / (1 - discountPercentage / 100);
-  };
 
   return (
     <div className="flex flex-col">
-      {/* Hero Banner */}
       <div className="bg-gray-900 text-white relative overflow-hidden">
-        {/* Lớp gradient đen từ trái sang */}
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-transparent z-10"></div>
-        
-        {/* Ảnh nền có opacity-40 y hệt bên PhonesPage để tạo nền đen đen mờ ảo */}
-        <div 
-          className="absolute inset-0 opacity-40 bg-cover bg-[center_30%] bg-no-repeat" 
+        <div
+          className="absolute inset-0 opacity-40 bg-cover bg-[center_30%] bg-no-repeat"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=2026&auto=format&fit=crop')" }}
         ></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-20">
           <h1 className="text-5xl font-black mb-4">Laptop & MacBook</h1>
-          <p className="text-gray-300 max-w-xl text-lg">Nâng tầm hiệu suất làm việc và giải trí với các dòng máy tính xách tay cấu hình khủng, thiết kế mỏng nhẹ hàng đầu.</p>
+          <p className="text-gray-300 max-w-xl text-lg">
+            Nâng tầm hiệu suất làm việc và giải trí với các dòng máy tính xách tay cấu hình khủng, thiết kế mỏng nhẹ hàng đầu.
+          </p>
         </div>
       </div>
 
-      {/* Nội dung chính */}
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col md:flex-row gap-8">
-        
-        {/* Sidebar Lọc */}
         <aside className="w-full md:w-64 flex-shrink-0">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
-            
-            {/* THƯƠNG HIỆU */}
             <div className="mb-8">
               <h3 className="font-bold text-[#002f4b] mb-4 uppercase tracking-wider text-[15px]">Thương hiệu</h3>
               <div className="space-y-3">
@@ -112,7 +91,6 @@ const LaptopsPage = () => {
               </div>
             </div>
 
-            {/* MỨC GIÁ */}
             <div className="mb-8">
               <h3 className="font-bold text-[#002f4b] mb-4 uppercase tracking-wider text-[15px]">Mức giá</h3>
               <div className="space-y-3">
@@ -130,14 +108,13 @@ const LaptopsPage = () => {
               </div>
             </div>
 
-            {/* SẮP XẾP */}
             <div>
               <h3 className="font-bold text-[#002f4b] mb-4 uppercase tracking-wider text-[15px]">Sắp xếp</h3>
               <div className="space-y-3">
                 <label className="flex items-center gap-3 cursor-pointer group">
                   <input
                     type="radio"
-                    name="sortPrice"
+                    name="sortLaptopPrice"
                     value="asc"
                     checked={sortOrder === "asc"}
                     onChange={() => setSortOrder("asc")}
@@ -145,11 +122,11 @@ const LaptopsPage = () => {
                   />
                   <span className="text-[#4a5568] group-hover:text-gray-900 transition-colors text-[14px]">Giá thấp đến cao</span>
                 </label>
-                
+
                 <label className="flex items-center gap-3 cursor-pointer group">
                   <input
                     type="radio"
-                    name="sortPrice"
+                    name="sortLaptopPrice"
                     value="desc"
                     checked={sortOrder === "desc"}
                     onChange={() => setSortOrder("desc")}
@@ -159,11 +136,9 @@ const LaptopsPage = () => {
                 </label>
               </div>
             </div>
-
           </div>
         </aside>
 
-        {/* Lưới Sản phẩm */}
         <main className="flex-1">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
@@ -171,98 +146,35 @@ const LaptopsPage = () => {
             </h2>
           </div>
 
-          {filteredLaptops.length > 0 ? (
+          {isLoading ? (
+            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center h-96 flex items-center justify-center text-gray-500">
+              Đang tải sản phẩm...
+            </div>
+          ) : error ? (
+            <div className="bg-white rounded-2xl border border-red-100 p-12 text-center h-96 flex items-center justify-center text-red-500">
+              {error}
+            </div>
+          ) : filteredLaptops.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredLaptops.map((laptop) => (
-                <Link 
-                  to={`/product/${laptop.id}`} 
-                  key={laptop.id} 
-                  className="bg-white rounded-[20px] p-4 shadow-sm border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative flex flex-col group cursor-pointer block"
-                >
-                  
-                  {/* Badge % Giảm giá */}
-                  {laptop.discountPercentage > 0 && (
-                    <div className="absolute top-0 right-0 bg-[#e30019] text-white text-[13px] font-bold px-3 py-1.5 rounded-bl-[16px] rounded-tr-[19px] z-10">
-                      -{laptop.discountPercentage}%
-                    </div>
-                  )}
+              {filteredLaptops.map((laptop) => {
+                const productId = getProductId(laptop);
 
-                  {/* Ảnh sản phẩm */}
-                  <div className="w-full aspect-square overflow-hidden flex items-center justify-center pt-2">
-                    <img 
-                      src={laptop.thumbnail} 
-                      alt={laptop.title} 
-                      className="object-contain w-[85%] h-[85%] group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-
-                  {/* Thông tin sản phẩm */}
-                  <div className="mt-4 flex flex-col flex-grow text-left">
-                    <span className="text-[12px] font-bold text-[#8f9bb3] uppercase tracking-wide">
-                      {laptop.brandName}
-                    </span>
-                    
-                    <h3 className="text-[15px] font-semibold text-[#002f4b] mt-1 line-clamp-2 min-h-[44px]">
-                      {laptop.title}
-                    </h3>
-                    
-                    {/* Đánh giá sao - ĐÃ ÁP DỤNG LOGIC ĐỔ ĐẦY THEO PHẦN TRĂM */}
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <div className="flex">
-                        {[...Array(5)].map((_, index) => {
-                          const fillPercent = Math.min(Math.max((laptop.rating || 0) - index, 0), 1) * 100;
-                          return (
-                            <div key={index} className="relative w-3.5 h-3.5">
-                              {/* Ngôi sao nền màu xám */}
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="absolute top-0 left-0 w-3.5 h-3.5 text-gray-200">
-                                <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
-                              </svg>
-                              {/* Lớp phủ ngôi sao màu vàng */}
-                              <div 
-                                className="absolute top-0 left-0 overflow-hidden h-full" 
-                                style={{ width: `${fillPercent}%` }}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-[#ffc107]">
-                                  <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <span className="text-[13px] text-[#8f9bb3]">
-                        ({laptop.reviews?.length || 0})
-                      </span>
-                    </div>
-
-                    <div className="mt-3 mb-4 flex flex-col">
-                      {laptop.discountPercentage > 0 ? (
-                        <span className="text-[13px] text-[#8f9bb3] line-through font-medium">
-                          {formatPrice(getOriginalPrice(laptop.price, laptop.discountPercentage))}
-                        </span>
-                      ) : (
-                        <span className="h-[20px]"></span>
-                      )}
-                      
-                      <span className="text-[20px] font-bold text-[#e30019]">
-                        {formatPrice(laptop.price)}
-                      </span>
-                    </div>
-
-                    <button className="w-full mt-auto bg-[#ffc107] hover:bg-[#e0a800] text-[#002f4b] text-[15px] font-bold py-2.5 rounded-lg transition-colors">
-                      MUA NGAY
-                    </button>
-                  </div>
-
-                </Link>
-              ))}
+                return (
+                  <Link to={`/product/${productId}`} key={productId} className="block">
+                    <ProductCard product={laptop} />
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center h-96 flex flex-col items-center justify-center">
-              <span className="text-6xl mb-4">🔍</span>
               <h3 className="text-xl font-bold text-gray-900">Không tìm thấy sản phẩm phù hợp</h3>
-              <button 
-                onClick={() => { setSelectedBrands([]); setSelectedPrices([]); }}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedBrands([]);
+                  setSelectedPrices([]);
+                }}
                 className="mt-6 px-6 py-2 bg-[#ffc107] text-gray-900 font-bold rounded-full hover:bg-[#e0a800] transition-colors"
               >
                 Xóa tất cả bộ lọc

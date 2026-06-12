@@ -1,7 +1,7 @@
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { AppError } from '../common/exceptions/AppError';
 
-export const notFound: RequestHandler = (req, res, next): void => {
+export const notFound: RequestHandler = (req, _res, next): void => {
   const error = new AppError(404, `Not Found - ${req.originalUrl}`);
   next(error);
 };

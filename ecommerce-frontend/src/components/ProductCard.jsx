@@ -1,16 +1,20 @@
 const ProductCard = ({ product }) => {
+  const price = Number(product.price || 0);
+  const discountPercentage = Number(product.discountPercentage || 0);
+  const rating = Number(product.rating || 0);
+
   // Tự động tính giá cũ vì trong data chuẩn Kotlin không còn trường oldPrice
   const oldPrice =
-    product.discountPercentage > 0
-      ? product.price / (1 - product.discountPercentage / 100)
+    discountPercentage > 0
+      ? price / (1 - discountPercentage / 100)
       : null;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 relative group hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer">
       {/* Badge Giảm giá màu đỏ góc trên phải */}
-      {product.discountPercentage > 0 && (
+      {discountPercentage > 0 && (
         <div className="absolute top-0 right-0 bg-red-600 text-white text-[11px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl z-10">
-          -{product.discountPercentage}%
+          -{discountPercentage}%
         </div>
       )}
 
@@ -40,7 +44,7 @@ const ProductCard = ({ product }) => {
           <div className="flex">
             {[...Array(5)].map((_, index) => {
               // Tính tỉ lệ lấp đầy của ngôi sao hiện tại (từ 0 đến 100%)
-              const fillPercent = Math.min(Math.max(product.rating - index, 0), 1) * 100;
+              const fillPercent = Math.min(Math.max(rating - index, 0), 1) * 100;
               return (
                 <div key={index} className="relative w-3.5 h-3.5">
                   {/* Ngôi sao nền màu xám nhạt */}
@@ -73,7 +77,7 @@ const ProductCard = ({ product }) => {
             </p>
           )}
           <p className="text-red-600 font-bold text-lg">
-            {product.price.toLocaleString("vi-VN")}đ
+            {price.toLocaleString("vi-VN")}đ
           </p>
         </div>
 

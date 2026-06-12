@@ -4,6 +4,7 @@ import { asyncHandler } from '../middlewares/asyncHandler';
 import { IUser, User } from '../models/User';
 import { generateToken } from '../utils/generateToken';
 import { AppError } from '../common/exceptions/AppError';
+import { sendJson } from '../utils/apiResponse';
 
 interface RegisterBody {
   userName: string;
@@ -45,7 +46,7 @@ export const registerUser: RequestHandler<{}, {}, RegisterBody> = asyncHandler(a
   }
 
   const user = await User.create({ userName, email, password, phoneNumber, address });
-  res.status(201).json(buildAuthResponse(user));
+  return sendJson(res, buildAuthResponse(user), 201);
 });
 
 export const loginUser: RequestHandler = asyncHandler(async (req, res) => {
@@ -59,5 +60,5 @@ export const loginUser: RequestHandler = asyncHandler(async (req, res) => {
   if (!user || !(await user.comparePassword(password))) {
     throw new AppError(401, 'Invalid email/phone or password');
   }
-  res.status(200).json(buildAuthResponse(user));
+  return sendJson(res, buildAuthResponse(user));
 });

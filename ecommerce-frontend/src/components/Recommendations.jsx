@@ -1,24 +1,26 @@
-import { useState } from "react";
-import { Link } from "react-router-dom"; // 1. IMPORT THÊM LINK TẠI ĐÂY
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
-import { dummyRecommended } from "../data/mockData";
+import { useProducts } from "../hooks/useProducts";
+import { getProductId } from "../utils/productUtils";
 
 const Recommendations = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { products, isLoading, error } = useProducts();
 
-  // Chỉ dùng mảng dummyRecommended thật.
-  // Nếu false -> Cắt lấy 6 cái đầu tiên. Nếu true -> Lấy tất cả.
+  const recommendedProducts = useMemo(() => {
+    return [...products].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  }, [products]);
+
   const displayedProducts = isExpanded
-    ? dummyRecommended
-    : dummyRecommended.slice(0, 6);
+    ? recommendedProducts
+    : recommendedProducts.slice(0, 6);
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-[#f8f9fa] rounded-3xl p-6 lg:p-8 border border-gray-100 shadow-sm">
-        {/* Header với Icon lấp lánh */}
         <div className="mb-6">
           <h2 className="text-xl font-black text-gray-900 uppercase flex items-center gap-2">
-            <span className="text-yellow-400 text-2xl">✨</span>
             GỢI Ý RIÊNG Dành Cho Bạn
           </h2>
           <p className="text-xs text-gray-500 mt-1">
@@ -27,25 +29,36 @@ const Recommendations = () => {
           </p>
         </div>
 
-        {/* Lưới sản phẩm */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 transition-all duration-500">
-          {displayedProducts.map((item) => (
-            /* 2. BỌC LINK RA BÊN NGOÀI PRODUCT CARD */
-            <Link 
-              to={`/product/${item.id}`} 
-              key={item.id} 
-              className="block" // Thêm block để vùng bấm (click area) bao trọn thẻ
-            >
-              <ProductCard product={item} />
-            </Link>
-          ))}
+          {isLoading ? (
+            <div className="col-span-full py-8 text-center text-gray-500">
+              Đang tải sản phẩm gợi ý...
+            </div>
+          ) : error ? (
+            <div className="col-span-full py-8 text-center text-red-500">
+              {error}
+            </div>
+          ) : displayedProducts.length > 0 ? (
+            displayedProducts.map((item) => {
+              const productId = getProductId(item);
+
+              return (
+                <Link to={`/product/${productId}`} key={productId} className="block">
+                  <ProductCard product={item} />
+                </Link>
+              );
+            })
+          ) : (
+            <div className="col-span-full py-8 text-center text-gray-500">
+              Hiện chưa có sản phẩm gợi ý.
+            </div>
+          )}
         </div>
 
-        {/* ĐÂY LÀ LOGIC ẨN/HIỆN NÚT */}
-        {/* Nút chỉ hiển thị (render) khi tổng số sản phẩm trong data > 6 */}
-        {dummyRecommended.length > 6 && (
+        {recommendedProducts.length > 6 && (
           <div className="mt-8 flex justify-center">
             <button
+              type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               className="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-semibold py-2.5 px-8 rounded-lg text-sm transition-all duration-300 active:scale-95"
             >

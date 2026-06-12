@@ -1,28 +1,35 @@
-import { useState } from "react";
-import { Link } from "react-router-dom"; // 1. IMPORT THÊM LINK TẠI ĐÂY
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import ProductCard from "./ProductCard";
-import { dummyAccessories } from "../data/mockData";
+import { useProducts } from "../hooks/useProducts";
+import {
+  getProductId,
+  hasAnyTag,
+  isAccessoryProduct,
+} from "../utils/productUtils";
+
+const accessoryFilters = [
+  { label: "Tất cả", value: "ALL" },
+  { label: "Tai Nghe", value: "HEADPHONE", tags: ["headphone"] },
+  { label: "Sạc Dự Phòng", value: "POWERBANK", tags: ["powerbank"] },
+  { label: "Chuột & Phím", value: "MOUSE_KEYBOARD", tags: ["mouse", "keyboard"] },
+];
 
 const Accessories = () => {
-  // 1. Khởi tạo state để lưu trạng thái bộ lọc
   const [activeFilter, setActiveFilter] = useState("ALL");
+  const { products, isLoading, error } = useProducts();
 
-  // 2. Logic lọc sản phẩm (ĐÃ SỬA: brand thành brandName)
-  const filteredAccessories =
-    activeFilter === "ALL"
-      ? dummyAccessories
-      : dummyAccessories.filter((item) => {
-          // Xử lý riêng cho nút "Chuột & Phím" vì nó gom 2 brandName lại
-          if (activeFilter === "CHUỘT & PHÍM") {
-            return (
-              item.brandName === "CHUỘT GAMING" || item.brandName === "BÀN PHÍM"
-            );
-          }
-          // Các nút khác thì lọc khớp chính xác tên brandName
-          return item.brandName === activeFilter;
-        });
+  const filteredAccessories = useMemo(() => {
+    const accessories = products.filter(isAccessoryProduct);
+    const currentFilter = accessoryFilters.find((item) => item.value === activeFilter);
 
-  // 3. Hàm đổi màu nút bấm
+    if (!currentFilter?.tags) return accessories.slice(0, 6);
+
+    return accessories
+      .filter((item) => hasAnyTag(item, currentFilter.tags))
+      .slice(0, 6);
+  }, [activeFilter, products]);
+
   const getButtonClass = (filterName) => {
     return activeFilter === filterName
       ? "bg-black text-white px-4 py-1.5 rounded-full font-semibold transition-colors"
@@ -36,48 +43,39 @@ const Accessories = () => {
           Phụ Kiện Công Nghệ Hot
         </h2>
 
-        {/* Các nút Filter đã gắn sự kiện onClick */}
         <div className="flex flex-wrap gap-2 text-sm">
-          <button
-            onClick={() => setActiveFilter("ALL")}
-            className={getButtonClass("ALL")}
-          >
-            Tất cả
-          </button>
-          <button
-            onClick={() => setActiveFilter("TAI NGHE")}
-            className={getButtonClass("TAI NGHE")}
-          >
-            Tai Nghe
-          </button>
-          <button
-            onClick={() => setActiveFilter("SẠC DỰ PHÒNG")}
-            className={getButtonClass("SẠC DỰ PHÒNG")}
-          >
-            Sạc Dự Phòng
-          </button>
-          <button
-            onClick={() => setActiveFilter("CHUỘT & PHÍM")}
-            className={getButtonClass("CHUỘT & PHÍM")}
-          >
-            Chuột & Phím
-          </button>
+          {accessoryFilters.map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              onClick={() => setActiveFilter(filter.value)}
+              className={getButtonClass(filter.value)}
+            >
+              {filter.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Render danh sách đã lọc */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {filteredAccessories.length > 0 ? (
-          filteredAccessories.map((item) => (
-            /* 2. BỌC LINK RA BÊN NGOÀI PRODUCT CARD */
-            <Link 
-              to={`/product/${item.id}`} 
-              key={item.id} 
-              className="block" // Thêm block để vùng bấm bao trọn thẻ
-            >
-              <ProductCard product={item} />
-            </Link>
-          ))
+        {isLoading ? (
+          <div className="col-span-full py-8 text-center text-gray-500">
+            Đang tải sản phẩm...
+          </div>
+        ) : error ? (
+          <div className="col-span-full py-8 text-center text-red-500">
+            {error}
+          </div>
+        ) : filteredAccessories.length > 0 ? (
+          filteredAccessories.map((item) => {
+            const productId = getProductId(item);
+
+            return (
+              <Link to={`/product/${productId}`} key={productId} className="block">
+                <ProductCard product={item} />
+              </Link>
+            );
+          })
         ) : (
           <div className="col-span-full py-8 text-center text-gray-500">
             Hiện chưa có sản phẩm nào thuộc danh mục này.

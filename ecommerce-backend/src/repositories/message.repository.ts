@@ -1,8 +1,7 @@
-import { SendMessageDto } from '../dtos_data-transfer-object/message.dto';
-import { Message, IMessage } from '../models/Message';
-import { Conversation } from '../models/Conversation';
+import { IMessage, Message } from '../models/Message';
 
 export class MessageRepository {
+<<<<<<< HEAD
     async createMessage(data: IMessage) {
         return Message.create(data);
     }
@@ -11,3 +10,9 @@ export class MessageRepository {
         return Message.find({conversationId: roomId});
     }
 }
+=======
+  async createMessage(data: IMessage) {
+    return Message.create(data);
+  }
+}
+>>>>>>> bb2dd1b (The basic features of the shopping cart on Fe and Be are now complete)

@@ -1,88 +1,176 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { dummyCart, dummyAll } from "../../data/mockData";
+import {
+  getCart,
+  removeCartItem,
+  updateCartItem,
+} from "../../api/cartService";
+
+const getErrorMessage = (error, fallback) => {
+  return error.response?.data?.message || fallback;
+};
+
+const getProduct = (item) => {
+  return typeof item.product === "object" && item.product !== null ? item.product : null;
+};
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState(dummyCart);
-  // selectedItems bây giờ sẽ lưu chuỗi kết hợp "productId-colorSelected"
+  const hasToken = Boolean(localStorage.getItem("token"));
+  const [cart, setCart] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(hasToken);
+  const [updatingItemId, setUpdatingItemId] = useState("");
   const navigate = useNavigate();
 
+  const cartItems = useMemo(() => cart?.items || [], [cart]);
+
   const formatPrice = (price) =>
-    new Intl.NumberFormat("vi-VN").format(price) + "đ";
+    new Intl.NumberFormat("vi-VN").format(price || 0) + "đ";
 
-  // Hàm tạo key duy nhất cho mỗi dòng trong giỏ hàng
-  const getItemKey = (productId, color) => `${productId}-${color}`;
-
-  // Cập nhật hàm thay đổi số lượng: Cần truyền cả ID và Màu
-  const handleQuantityChange = (productId, color, type) => {
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.product === productId && item.colorSelected === color) {
-          const productDetail = dummyAll.find((p) => String(p.id) === String(productId));
-
-          // Lấy index của màu sắc được chọn trong mảng colors của sản phẩm
-          const colorIndex = productDetail?.colors?.indexOf(color);
-
-          // Lấy số lượng tồn kho tương ứng từ mảng stock, nếu không tìm thấy thì mặc định là 99
-          let maxStock = 99;
-          if (colorIndex !== undefined && colorIndex !== -1 && productDetail?.stock && productDetail.stock[colorIndex] !== undefined) {
-             maxStock = productDetail.stock[colorIndex];
-          } else if (typeof productDetail?.stock === 'number') {
-             // Trường hợp dự phòng nếu một số sản phẩm vẫn dùng stock là một số duy nhất
-             maxStock = productDetail.stock;
-          }
-
-          let newQuantity = item.quantity;
-          if (type === "minus" && newQuantity > 1) newQuantity -= 1;
-          if (type === "plus" && newQuantity < maxStock) newQuantity += 1;
-
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      }),
-    );
+  const fetchCart = async () => {
+    try {
+      const nextCart = await getCart();
+      setCart(nextCart);
+    } catch (err) {
+      alert(getErrorMessage(err, "Không tải được giỏ hàng."));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Cập nhật hàm xóa
-  const handleDelete = (productId, color) => {
-    setCartItems((prev) =>
-      prev.filter(
-        (item) => !(item.product === productId && item.colorSelected === color),
-      ),
-    );
-    setSelectedItems((prev) =>
-      prev.filter((key) => key !== getItemKey(productId, color)),
-    );
-  };
+  useEffect(() => {
+    if (hasToken) {
+      void Promise.resolve().then(fetchCart);
+    }
+  }, [hasToken]);
 
-  // Cập nhật hàm tích chọn
-  const handleSelectItem = (productId, color) => {
-    const key = getItemKey(productId, color);
+  const handleSelectItem = (itemId) => {
     setSelectedItems((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId],
     );
   };
 
   const handleSelectAll = () => {
     if (selectedItems.length === cartItems.length) {
       setSelectedItems([]);
-    } else {
-      setSelectedItems(
-        cartItems.map((item) => getItemKey(item.product, item.colorSelected)),
-      );
+      return;
+    }
+
+    setSelectedItems(cartItems.map((item) => item._id));
+  };
+
+  const getVariantStock = (item) => {
+    const product = getProduct(item);
+    const variant = product?.variants?.find(
+      (productVariant) => productVariant.color === item.colorSelected,
+    );
+
+    return variant?.stock || 0;
+  };
+
+  const handleQuantityChange = async (item, type) => {
+    const maxStock = getVariantStock(item);
+    let nextQuantity = item.quantity;
+
+    if (type === "minus" && nextQuantity > 1) nextQuantity -= 1;
+    if (type === "plus" && nextQuantity < maxStock) nextQuantity += 1;
+
+    if (nextQuantity === item.quantity) return;
+
+    try {
+      setUpdatingItemId(item._id);
+      const nextCart = await updateCartItem(item._id, nextQuantity);
+      setCart(nextCart);
+    } catch (err) {
+      alert(getErrorMessage(err, "Không cập nhật được số lượng sản phẩm."));
+    } finally {
+      setUpdatingItemId("");
+    }
+  };
+
+  const handleDelete = async (itemId) => {
+    try {
+      const nextCart = await removeCartItem(itemId);
+      setCart(nextCart);
+      setSelectedItems((prev) => prev.filter((id) => id !== itemId));
+    } catch (err) {
+      alert(getErrorMessage(err, "Không xóa được sản phẩm khỏi giỏ hàng."));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedItems.length === 0) return;
+    if (!window.confirm("Bạn có chắc chắn muốn xóa các sản phẩm đã chọn?")) return;
+
+    try {
+      await Promise.all(selectedItems.map((itemId) => removeCartItem(itemId)));
+      setSelectedItems([]);
+      await fetchCart();
+    } catch (err) {
+      alert(getErrorMessage(err, "Không xóa được các sản phẩm đã chọn."));
     }
   };
 
   const totalAmount = cartItems
-    .filter((item) =>
-      selectedItems.includes(getItemKey(item.product, item.colorSelected)),
-    )
+    .filter((item) => selectedItems.includes(item._id))
     .reduce((sum, item) => {
-      const productDetail = dummyAll.find((p) => p.id === item.product);
-      const price = productDetail ? productDetail.price : 0;
-      return sum + price * item.quantity;
+      const product = getProduct(item);
+      return sum + (product?.price || 0) * item.quantity;
     }, 0);
+
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) return;
+
+    const checkoutItems = cartItems
+      .filter((item) => selectedItems.includes(item._id))
+      .map((item) => {
+        const product = getProduct(item);
+
+        return {
+          cartItemId: item._id,
+          product: product?._id,
+          title: product?.title,
+          thumbnail: product?.thumbnail,
+          price: product?.price || 0,
+          quantity: item.quantity,
+          colorSelected: item.colorSelected,
+        };
+      });
+
+    navigate("/checkout", {
+      state: {
+        checkoutItems,
+        totalAmount,
+        isBuyNow: false,
+      },
+    });
+  };
+
+  if (!hasToken) {
+    return (
+      <div className="bg-[#f4f6f8] min-h-[70vh] flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Vui lòng đăng nhập để xem giỏ hàng
+        </h2>
+        <Link
+          to="/"
+          className="px-8 py-3 bg-[#e30019] text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg"
+        >
+          VỀ TRANG CHỦ
+        </Link>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="bg-[#f4f6f8] min-h-[70vh] flex items-center justify-center">
+        <p className="text-gray-500 font-medium">Đang tải giỏ hàng...</p>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -154,20 +242,22 @@ const CartPage = () => {
           </div>
 
           {cartItems.map((item, index) => {
-            const productDetail = dummyAll.find((p) => p.id === item.product);
-            if (!productDetail) return null;
-
-            const originalPrice =
-              productDetail.discountPercentage > 0
-                ? productDetail.price /
-                  (1 - productDetail.discountPercentage / 100)
-                : null;
-            // Render màu sắc dựa trên item.colorSelected
+            const product = getProduct(item);
             const variantText = `Phân loại: ${item.colorSelected}`;
+            const maxStock = getVariantStock(item);
+            const isUpdating = updatingItemId === item._id;
+
+            if (!product) {
+              return (
+                <div key={item._id} className="p-6 text-sm text-gray-500 border-b border-gray-100">
+                  Sản phẩm trong giỏ hàng không còn tồn tại.
+                </div>
+              );
+            }
 
             return (
               <div
-                key={getItemKey(item.product, item.colorSelected)}
+                key={item._id}
                 className={`grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 lg:p-6 items-center transition-colors ${
                   index !== cartItems.length - 1
                     ? "border-b border-gray-100"
@@ -177,33 +267,32 @@ const CartPage = () => {
                 <div className="col-span-1 lg:col-span-5 flex items-start lg:items-center gap-4">
                   <input
                     type="checkbox"
-                    checked={selectedItems.includes(
-                      getItemKey(item.product, item.colorSelected),
-                    )}
-                    onChange={() =>
-                      handleSelectItem(item.product, item.colorSelected)
-                    }
+                    checked={selectedItems.includes(item._id)}
+                    onChange={() => handleSelectItem(item._id)}
                     className="w-5 h-5 accent-[#e30019] cursor-pointer mt-3 lg:mt-0"
                   />
                   <Link
-                    to={`/product/${item.product}`}
+                    to={`/product/${product._id}`}
                     className="w-20 h-20 lg:w-24 lg:h-24 flex-shrink-0 border border-gray-200 rounded-lg p-1 bg-white hover:border-[#ffc107] transition-colors"
                   >
                     <img
-                      src={productDetail.thumbnail}
-                      alt={productDetail.title}
+                      src={product.thumbnail}
+                      alt={product.title}
                       className="w-full h-full object-contain"
                     />
                   </Link>
                   <div className="flex flex-col">
                     <Link
-                      to={`/product/${item.product}`}
+                      to={`/product/${product._id}`}
                       className="text-base font-semibold text-gray-900 hover:text-[#e30019] line-clamp-2 transition-colors"
                     >
-                      {productDetail.title}
+                      {product.title}
                     </Link>
                     <span className="text-sm text-gray-500 mt-1">
                       {variantText}
+                    </span>
+                    <span className="text-xs text-gray-400 mt-1">
+                      Còn lại: {maxStock}
                     </span>
                   </div>
                 </div>
@@ -213,13 +302,8 @@ const CartPage = () => {
                     Đơn giá:
                   </span>
                   <div className="text-center">
-                    {originalPrice && (
-                      <div className="text-gray-400 line-through text-xs mb-0.5">
-                        {formatPrice(originalPrice)}
-                      </div>
-                    )}
                     <div className="text-black font-semibold">
-                      {formatPrice(productDetail.price)}
+                      {formatPrice(product.price)}
                     </div>
                   </div>
                 </div>
@@ -230,14 +314,10 @@ const CartPage = () => {
                   </span>
                   <div className="inline-flex items-center bg-white rounded-md border border-gray-300">
                     <button
-                      onClick={() =>
-                        handleQuantityChange(
-                          item.product,
-                          item.colorSelected,
-                          "minus",
-                        )
-                      }
-                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-600 text-lg transition-colors"
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={() => handleQuantityChange(item, "minus")}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-600 text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       -
                     </button>
@@ -248,14 +328,10 @@ const CartPage = () => {
                       className="w-10 h-8 text-center font-medium text-sm bg-transparent focus:outline-none text-black border-x border-gray-200"
                     />
                     <button
-                      onClick={() =>
-                        handleQuantityChange(
-                          item.product,
-                          item.colorSelected,
-                          "plus",
-                        )
-                      }
-                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-600 text-lg transition-colors"
+                      type="button"
+                      disabled={isUpdating || item.quantity >= maxStock}
+                      onClick={() => handleQuantityChange(item, "plus")}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 text-gray-600 text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       +
                     </button>
@@ -267,15 +343,14 @@ const CartPage = () => {
                     Số tiền:
                   </span>
                   <div className="text-[#e30019] font-bold text-lg">
-                    {formatPrice(productDetail.price * item.quantity)}
+                    {formatPrice(product.price * item.quantity)}
                   </div>
                 </div>
 
                 <div className="col-span-1 lg:col-span-1 flex justify-end lg:justify-center mt-2 lg:mt-0">
                   <button
-                    onClick={() =>
-                      handleDelete(item.product, item.colorSelected)
-                    }
+                    type="button"
+                    onClick={() => handleDelete(item._id)}
                     className="text-gray-500 hover:text-[#e30019] text-sm font-semibold transition-colors"
                   >
                     Xóa
@@ -306,23 +381,8 @@ const CartPage = () => {
                 </span>
               </label>
               <button
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Bạn có chắc chắn muốn xóa các sản phẩm đã chọn?",
-                    )
-                  ) {
-                    setCartItems(
-                      cartItems.filter(
-                        (item) =>
-                          !selectedItems.includes(
-                            getItemKey(item.product, item.colorSelected),
-                          ),
-                      ),
-                    );
-                    setSelectedItems([]);
-                  }
-                }}
+                type="button"
+                onClick={handleDeleteSelected}
                 className={`text-sm font-medium transition-colors ${selectedItems.length > 0 ? "text-gray-900 hover:text-[#e30019]" : "text-gray-400 cursor-not-allowed"}`}
                 disabled={selectedItems.length === 0}
               >
@@ -346,31 +406,9 @@ const CartPage = () => {
               </div>
 
               <button
-                onClick={() => {
-                  if (selectedItems.length > 0) {
-                    const checkoutItems = cartItems
-                      .filter((item) =>
-                        selectedItems.includes(
-                          getItemKey(item.product, item.colorSelected),
-                        ),
-                      )
-                      .map((item) => {
-                        const detail = dummyAll.find(
-                          (p) => p.id === item.product,
-                        );
-                        return { ...item, ...detail }; 
-                      });
-
-                    // Chỉ gọi navigate 1 lần duy nhất thế này thôi nhé
-                    navigate("/checkout", {
-                      state: {
-                        checkoutItems,
-                        totalAmount,
-                        isBuyNow: false, // Báo là đi từ giỏ hàng sang
-                      },
-                    });
-                  }
-                }}
+                type="button"
+                onClick={handleCheckout}
+                disabled={selectedItems.length === 0}
                 className={`px-8 sm:px-12 py-3 sm:py-4 font-black rounded-xl uppercase transition-all shadow-md text-sm sm:text-base ${
                   selectedItems.length > 0
                     ? "bg-[#e30019] hover:bg-red-700 text-white active:scale-95 shadow-red-500/30"
