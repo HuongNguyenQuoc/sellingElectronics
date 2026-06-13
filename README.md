@@ -28,7 +28,7 @@ The project includes core e-commerce features such as authentication, product ma
 - Clean project structure using Controller-Service-Repository pattern
 
 ## Project Structure
-
+```bash
 src/
 ├── config/              # Database configuration
 ├── controllers/         # Handle HTTP requests and responses
@@ -41,6 +41,7 @@ src/
 ├── common/              # Shared utilities and exceptions
 ├── app.ts               # Express app configuration
 └── server.ts            # Server entry point
+```
 Main Modules
 Authentication
 Register user
