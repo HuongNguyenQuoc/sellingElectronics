@@ -1,11 +1,11 @@
 import { io } from "socket.io-client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { dummyMessages } from "../data/mockData"; // Import dữ liệu từ mockData
 import OrderCard from "./OrderCard"; // Đảm bảo đường dẫn này đúng với nơi bạn lưu OrderCard
 import api from '../api/axiosConfig'
 
-const socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:3000");
+const socket = io("http://localhost:3000");
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +15,8 @@ const ChatWidget = () => {
   const currentUser = JSON.parse(
         localStorage.getItem("user")
       );
+
+  const messagesEndRef = useRef(null);
 
 
   //get old messages
@@ -33,6 +35,14 @@ const ChatWidget = () => {
 
     fetchMessages();
   }, [currentUser?._id]);
+
+  useEffect(() => {
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  }, [messages, isOpen]);
 
 
   // Lắng nghe sự kiện 'toggleChat' từ bất cứ đâu
@@ -97,6 +107,57 @@ const ChatWidget = () => {
     setInputMessage("");
   };
 
+  const formatMessageDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+
+    const diffDays = Math.floor(
+      (now - date) / (1000 * 60 * 60 * 24)
+    );
+
+    const time = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    if (diffDays === 0) {
+      return `Hôm nay, ${time}`;
+    }
+
+    if (diffDays === 1) {
+      return `Hôm qua, ${time}`;
+    }
+
+    if (diffDays < 7) {
+      const weekday = date.toLocaleDateString("vi-VN", {
+        weekday: "long",
+      });
+
+      return `${weekday}, ${time}`;
+    }
+
+    return `${date.toLocaleDateString("vi-VN")}, ${time}`;
+  };
+
+  const shouldShowTimestamp = (currentMsg, prevMsg) => {
+    if (!prevMsg) return true;
+
+    const currentDate = new Date(currentMsg.createdAt);
+    const prevDate = new Date(prevMsg.createdAt);
+
+    // Khác ngày
+    if (currentDate.toDateString() !== prevDate.toDateString()) {
+      return true;
+    }
+
+    // Cách nhau hơn 10 phút
+    const diffMinutes =
+      (currentDate - prevDate) / (1000 * 60);
+
+    return diffMinutes >= 10;
+  };
+
   return (
     <>
       {isOpen && (
@@ -131,47 +192,52 @@ const ChatWidget = () => {
 
           {/* Body Chat */}
           <div className="h-80 p-4 bg-gray-50 overflow-y-auto flex flex-col gap-4">
-            <div className="text-center text-[11px] font-medium text-gray-400 my-1 bg-white inline-block mx-auto px-3 py-1 rounded-full shadow-sm">
-              Hôm nay, 10:45 AM
-            </div>
 
             {/* DÙNG VÒNG LẶP ĐỂ VẼ TOÀN BỘ TIN NHẮN TỪ MOCK DATA */}
-            {messages.map((msg) => {
+            {messages.map((msg,index) => {
               const isAdmin = msg.senderId === "admin";
+              const showTimestamp = shouldShowTimestamp(
+                msg,
+                messages[index - 1]
+              );
 
               return (
-                <div key={msg._id} className={`flex gap-2 ${isAdmin ? "items-end" : "justify-end mt-1"}`}>
-                  
-                  {/* Avatar Admin (Chỉ hiển thị nếu là admin gửi) */}
-                  {isAdmin && (
-                    <div className="w-7 h-7 bg-yellow-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black text-gray-900 shadow-sm">
-                      TV
+                <div key={msg._id}>
+                  {showTimestamp &&(
+                    <div className="text-center text-[11px] font-medium text-gray-400 my-1 bg-white inline-block mx-auto px-3 py-1 rounded-full shadow-sm">
+                      {formatMessageDate(msg.createdAt)}
                     </div>
                   )}
 
-                  <div className={`max-w-[85%] ${!isAdmin ? "bg-gray-900 text-white p-3 rounded-2xl rounded-br-sm shadow-md text-[14px]" : ""}`}>
-                    
-                    {/* TRƯỜNG HỢP 1: TIN NHẮN CHỮ */}
-                    {msg.content && isAdmin && (
-                      <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-sm text-[14px] text-gray-800 shadow-sm">
-                        {msg.content}
+                  <div className={`flex gap-2 ${isAdmin ? "items-end" : "justify-end mt-1"}`}>
+                    {isAdmin && (
+                      <div className="w-7 h-7 bg-yellow-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black text-gray-900 shadow-sm">
+                        TV
                       </div>
                     )}
-                    {msg.content && !isAdmin && (
-                      <span>{msg.content}</span>
-                    )}
 
-                    {/* TRƯỜNG HỢP 2: TIN NHẮN ĐƠN HÀNG */}
-                    {msg.orderData && (
-                      <OrderCard 
-                        checkoutItems={msg.orderData.checkoutItems} 
-                        totalAmount={msg.orderData.totalAmount} 
-                      />
-                    )}
+                    <div className={`max-w-[85%] ${!isAdmin ? "bg-gray-900 text-white p-3 rounded-2xl rounded-br-sm shadow-md text-[14px]" : ""}`}>
+                      {msg.content && isAdmin && (
+                        <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-sm text-[14px] text-gray-800 shadow-sm">
+                          {msg.content}
+                        </div>
+                      )}
+
+                      {msg.content && !isAdmin && <span>{msg.content}</span>}
+
+                      {msg.orderData && (
+                        <OrderCard
+                          checkoutItems={msg.orderData.checkoutItems}
+                          totalAmount={msg.orderData.totalAmount}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })}
+
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Footer (Khung nhập) */}

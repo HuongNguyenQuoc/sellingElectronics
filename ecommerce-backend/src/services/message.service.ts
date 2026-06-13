@@ -1,6 +1,6 @@
 import { SendMessageDto } from '../dtos/message.dto';
-import { IMessage } from '../models/Message';
 import { MessageRepository } from '../repositories/message.repository';
+import { IMessage } from '../models/Message';
 
 const messageRepository = new MessageRepository();
 

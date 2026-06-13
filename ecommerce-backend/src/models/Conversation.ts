@@ -1,8 +1,9 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
+import { User } from './User';
 
 export interface IConversation {
     //_id tự sinh
-    participantId:string;
+    participantId: Types.ObjectId; // just userId only
     lastMessage: string;
     isAdminRead:boolean;
     isUserRead:boolean;
@@ -11,7 +12,8 @@ export interface IConversation {
 
 const ConversationSchema = new Schema<IConversation>({
     participantId: {
-        type: String,
+        type: Types.ObjectId,
+        ref: 'User',
         required: true
     },
     lastMessage: {

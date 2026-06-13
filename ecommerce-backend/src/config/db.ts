@@ -13,7 +13,8 @@ export const connectDB = async () => {
   } catch (error) {
     // With strict mode, 'error' is of type 'unknown'. We need to check if it's an Error instance.
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`Error: ${message}`);
+    console.error('Database connection error:', error);
+    // keep original behavior but print full stack/object for easier debugging
     process.exit(1);
   }
 };

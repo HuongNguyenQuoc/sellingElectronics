@@ -1,11 +1,12 @@
-import { IMessage, Message } from '../models/Message';
+import { SendMessageDto } from '../dtos/message.dto';
+import { Message, IMessage } from '../models/Message';
 
 export class MessageRepository {
-  async createMessage(data: IMessage) {
-    return Message.create(data);
-  }
+    async createMessage(data: IMessage) {
+        return Message.create(data);
+    }
 
-  async getAllMessages(roomId: string): Promise<IMessage[]> {
-    return Message.find({ conversationId: roomId });
-  }
+    async getAllMessages(roomId:string): Promise<IMessage[]> {
+        return Message.find({conversationId: roomId});
+    }
 }

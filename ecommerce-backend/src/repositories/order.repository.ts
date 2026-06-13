@@ -1,6 +1,4 @@
-import { Types } from 'mongoose';
 import { IOrder, Order } from '../models/Order';
-import { ShippingAddressDto } from '../dtos/order.dto';
 
 export class OrderRepository {
   // Get all order

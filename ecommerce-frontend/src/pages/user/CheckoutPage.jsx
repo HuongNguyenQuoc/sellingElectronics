@@ -40,7 +40,7 @@ const CheckoutPage = () => {
 
     await api.post("/orders", {
       items: checkoutItems.map((item) => ({
-        productId: item.productId,
+        productId: item.product,
         image: item.thumbnail,
         quantity: item.quantity,
         price: item.price,

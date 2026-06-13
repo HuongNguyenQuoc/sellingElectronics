@@ -53,15 +53,15 @@ export const createOrderService = async (userId:string, dto: CreateOrderDto) => 
 
 
     //save to Message
-    await messageRepository.createMessage({
-        conversationId: userId,
-        senderId: userId,
-        receiverId: 'admin',
-        orderData: {
-          checkoutItems: checkoutItems,
-          totalAmount: totalCost
-        }
-    })
+    // await messageRepository.createMessage({
+    //     conversationId: userId,
+    //     senderId: userId,
+    //     receiverId: 'admin',
+    //     orderData: {
+    //       checkoutItems: checkoutItems,
+    //       totalAmount: totalCost
+    //     }
+    // })
 
 
     return newOrder;

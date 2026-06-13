@@ -2,13 +2,10 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { createOrderService, getAllOrdersService, getOrderByIdService, updateOrderStatusService } from '../services/order.service'
 import { OrderStatus } from '../common/constants/order.constants';
-const Order = require('../models/Order');
-const Product = require('../models/Product');
 
 // Create new order
 export const createOrder = async (req: AuthRequest, res: Response) => {
   try {
-// TODO: Đang test, tí thêm phần user vào đây
 
     if (!req.user) {
       return res.status(401).json({
@@ -24,7 +21,6 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 
 export const getAllOrders = async (req: AuthRequest, res: Response) => {
   try {
-// data test, tí sửa lại cho t
     if (!req.user) {
       return res.status(401).json({
         message: 'Unauthorized'

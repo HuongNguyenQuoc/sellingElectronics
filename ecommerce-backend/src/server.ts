@@ -9,6 +9,7 @@ import { Server as SocketIOServer } from 'socket.io';
 
 
 import orderRoutes from './routes/orderRoutes';
+import conversationRoutes from './routes/conversationRoutes';
 
 import { connectDB } from './config/db';
 import { errorHandler, notFound } from './middlewares/errorMiddleware';
@@ -17,6 +18,7 @@ import productRoutes from './routes/productRoutes';
 import messageRoutes from './routes/messageRoutes'
 import { IMessage } from './models/Message';
 import { sendMessageService } from './services/message.service';
+import { createOrUpdateConversationService } from './services/conversation.service';
 
 import dns from 'dns';
 
@@ -44,7 +46,10 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/messages', messageRoutes);
+
 app.use('/api/carts', cartRoutes);
+
+app.use('/api/conversations', conversationRoutes);
 
 app.get('/', (_req: Request, res: Response) => {
   // _req is a convention to indicate that the request parameter
@@ -79,11 +84,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_message', async (data: IMessage) => {
-    console.log('🔥 send_message triggered');           // Có chạy vào đây không?
-    console.log('📨 Data:', JSON.stringify(data)); 
       try{
-        console.log('dsfs');
+        console.log('chạy vào oke');
         const messageData = await sendMessageService(data)
+        await createOrUpdateConversationService({
+            lastMessage: data.content
+        },data.conversationId);
         // Emit the message to the receiver's room
         io.to(data.receiverId).emit('receive_message',messageData);
         socket.emit('message_sent',messageData);
@@ -94,10 +100,6 @@ io.on('connection', (socket) => {
           message:'Send message failed'
         });
       }
-  });
-
-  socket.onAny((event, ...args) => {
-    console.log(`📨 Event nhận được: "${event}"`, args);
   });
 
   socket.on('disconnect', () => {
