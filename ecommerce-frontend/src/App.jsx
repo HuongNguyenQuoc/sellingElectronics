@@ -5,6 +5,7 @@ import "./App.css";
 import MainLayout from "./layouts/MainLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminRoute from "./components/AdminRoute";
+import UserRoute from "./components/UserRoute";
 
 // --- PAGES KHÁCH HÀNG ---
 import HomePage from "./pages/user/HomePage";
@@ -33,18 +34,20 @@ function App() {
         {/* ================================================== */}
         {/* LUỒNG 1: GIAO DIỆN KHÁCH HÀNG (Có Navbar & Footer) */}
         {/* ================================================== */}
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/phones" element={<PhonesPage />} />
-          <Route path="/laptops" element={<LaptopsPage />} />
-          <Route path="/accessories" element={<AccessoriesPage />} />
-          <Route path="/flash-sale" element={<FlashDeal />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/orders" element={<MyOrders />} />
-          <Route path="/orders/:id" element={<OrderDetails />} />
+        <Route element={<UserRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/phones" element={<PhonesPage />} />
+            <Route path="/laptops" element={<LaptopsPage />} />
+            <Route path="/accessories" element={<AccessoriesPage />} />
+            <Route path="/flash-sale" element={<FlashDeal />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/orders" element={<MyOrders />} />
+            <Route path="/orders/:id" element={<OrderDetails />} />
+          </Route>
         </Route>
 
         {/* ================================================== */}
