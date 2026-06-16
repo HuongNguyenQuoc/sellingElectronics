@@ -216,22 +216,36 @@ const ChatWidget = () => {
                       </div>
                     )}
 
-                    <div className={`max-w-[85%] ${!isAdmin ? "bg-gray-900 text-white p-3 rounded-2xl rounded-br-sm shadow-md text-[14px]" : ""}`}>
-                      {msg.content && isAdmin && (
-                        <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-sm text-[14px] text-gray-800 shadow-sm">
-                          {msg.content}
-                        </div>
-                      )}
+                    <div
+          className={`${
+            msg.orderData
+              ? "max-w-[95%]"
+              : "max-w-[85%]"
+          } ${
+            !isAdmin && !msg.orderData
+              ? "bg-gray-900 text-white p-3 rounded-2xl rounded-br-sm shadow-md text-[14px]"
+              : ""
+          }`}
+        >
+          {msg.content && isAdmin && (
+            <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-sm text-[14px] text-gray-800 shadow-sm">
+              {msg.content}
+            </div>
+          )}
 
-                      {msg.content && !isAdmin && <span>{msg.content}</span>}
+          {msg.content && !isAdmin && !msg.orderData && (
+            <span>{msg.content}</span>
+          )}
 
-                      {msg.orderData && (
-                        <OrderCard
-                          checkoutItems={msg.orderData.checkoutItems}
-                          totalAmount={msg.orderData.totalAmount}
-                        />
-                      )}
-                    </div>
+          {msg.orderData && (
+            <div className={`${isAdmin ? "" : "flex justify-end"}`}>
+              <OrderCard
+                checkoutItems={msg.orderData.checkoutItems}
+                totalAmount={msg.orderData.totalAmount}
+              />
+            </div>
+          )}
+        </div>
                   </div>
                 </div>
               );

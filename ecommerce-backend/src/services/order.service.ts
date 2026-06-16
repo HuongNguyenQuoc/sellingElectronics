@@ -52,16 +52,16 @@ export const createOrderService = async (userId:string, dto: CreateOrderDto) => 
     });
 
 
-    //save to Message
-    // await messageRepository.createMessage({
-    //     conversationId: userId,
-    //     senderId: userId,
-    //     receiverId: 'admin',
-    //     orderData: {
-    //       checkoutItems: checkoutItems,
-    //       totalAmount: totalCost
-    //     }
-    // })
+    // save to Message
+    await messageRepository.createMessage({
+        conversationId: userId,
+        senderId: userId,
+        receiverId: 'admin',
+        orderData: {
+          checkoutItems: checkoutItems,
+          totalAmount: totalCost
+        }
+    })
 
 
     return newOrder;
@@ -73,7 +73,7 @@ export const getOrderByIdService = async(orderId:string) =>{
     return order;
 }
 
-export const getAllOrdersService = async(userId:string) => {
+export const getAllOrdersService = async(userId?:string) => {
     const orders = await orderRepository.findByUserId(userId);
     return orders
 }

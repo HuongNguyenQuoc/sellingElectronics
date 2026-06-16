@@ -1,75 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from "recharts";
-import { dummyAll } from "../../data/mockData";
+import api from "../../api/axiosConfig";
 
-// ================= DỮ LIỆU MOCK THEO CHUẨN INTERFACE IOrder =================
-const currentYear = new Date().getFullYear();
-const currentMonth = new Date().getMonth(); 
-
-const mockOrders = [
-  // THÁNG HIỆN TẠI (Tính doanh thu cho status: 'SHIPPED')
-  // Tổng doanh thu 100.000.000đ -> Điện thoại 53%, Laptop 32%, Phụ kiện 15%
-  { 
-    _id: "ORD-D01", userId: "user_6", status: "SHIPPED", paymentMethod: "COD", totalCost: 53000000, createdAt: new Date(currentYear, currentMonth, 1).getTime(),
-    shippingAddress: { fullName: "Vũ F", phone: "0906", address: "Số 1 Hà Nội", city: "Hà Nội" },
-    items: [{ product: "11", name: "iPhone 15 Pro Max 256GB", image: "https://placehold.co/100x100?text=SP", quantity: 20, price: 2650000, colorSelected: "Vàng" }] 
-  },
-  { 
-    _id: "ORD-D02", userId: "user_7", status: "SHIPPED", paymentMethod: "Momo", totalCost: 20000000, createdAt: new Date(currentYear, currentMonth, 2).getTime(),
-    shippingAddress: { fullName: "Bùi G", phone: "0907", address: "Quận 1", city: "HCM" },
-    items: [{ product: "12", name: "MacBook Air M2 2022", image: "https://placehold.co/100x100?text=SP", quantity: 10, price: 2000000, colorSelected: "Bạc" }] 
-  },
-  { 
-    _id: "ORD-D03", userId: "user_8", status: "SHIPPED", paymentMethod: "COD", totalCost: 12000000, createdAt: new Date(currentYear, currentMonth, 3).getTime(),
-    shippingAddress: { fullName: "Đặng H", phone: "0908", address: "Hải Châu", city: "Đà Nẵng" },
-    items: [{ product: "14", name: "Asus Zenbook 14 OLED", image: "https://placehold.co/100x100?text=SP", quantity: 8, price: 1500000, colorSelected: "Đen" }] 
-  },
-  { 
-    _id: "ORD-D04", userId: "user_9", status: "SHIPPED", paymentMethod: "Thẻ Tín Dụng", totalCost: 10000000, createdAt: new Date(currentYear, currentMonth, 4).getTime(),
-    shippingAddress: { fullName: "Ngô I", phone: "0909", address: "Ninh Kiều", city: "Cần Thơ" },
-    items: [{ product: "15", name: "Tai nghe Bluetooth Sony", image: "https://placehold.co/100x100?text=SP", quantity: 25, price: 400000, colorSelected: "Đen" }] 
-  },
-  { 
-    _id: "ORD-D05", userId: "user_10", status: "SHIPPED", paymentMethod: "COD", totalCost: 5000000, createdAt: new Date(currentYear, currentMonth, 5).getTime(),
-    shippingAddress: { fullName: "Đỗ K", phone: "0910", address: "Lê Chân", city: "Hải Phòng" },
-    items: [{ product: "16", name: "Chuột không dây Logitech", image: "https://placehold.co/100x100?text=SP", quantity: 10, price: 500000, colorSelected: "Trắng" }] 
-  },
-
-  // CÁC THÁNG TRƯỚC (Để vẽ biểu đồ cột 12 tháng)
-  { 
-    _id: "ORD-M01", userId: "user_1", status: "SHIPPED", paymentMethod: "COD", totalCost: 19290000, createdAt: new Date(currentYear, 0, 15).getTime(),
-    shippingAddress: { fullName: "Nguyễn Văn A", phone: "0901", address: "Cầu Giấy", city: "Hà Nội" }, items: [] 
-  },
-  { 
-    _id: "ORD-M02", userId: "user_2", status: "SHIPPED", paymentMethod: "Thẻ Tín Dụng", totalCost: 38580000, createdAt: new Date(currentYear, 1, 20).getTime(),
-    shippingAddress: { fullName: "Trần B", phone: "0902", address: "Quận 3", city: "HCM" }, items: [] 
-  },
-  { 
-    _id: "ORD-M03", userId: "user_3", status: "SHIPPED", paymentMethod: "Momo", totalCost: 5990000, createdAt: new Date(currentYear, 2, 10).getTime(),
-    shippingAddress: { fullName: "Lê C", phone: "0903", address: "Sơn Trà", city: "Đà Nẵng" }, items: [] 
-  },
-  { 
-    _id: "ORD-M04", userId: "user_4", status: "SHIPPED", paymentMethod: "COD", totalCost: 12000000, createdAt: new Date(currentYear, 3, 5).getTime(),
-    shippingAddress: { fullName: "Phạm D", phone: "0904", address: "Bình Thủy", city: "Cần Thơ" }, items: [] 
-  },
-
-  // TRẠNG THÁI KHÁC (Chờ xử lý, Đã hủy)
-  { 
-    _id: "ORD-P01", userId: "user_11", status: "PROCESSING", paymentMethod: "COD", totalCost: 12000000, createdAt: new Date(currentYear, currentMonth, 6).getTime(),
-    shippingAddress: { fullName: "Lý M", phone: "0911", address: "Quận 5", city: "HCM" }, items: [] 
-  },
-  { 
-    _id: "ORD-C01", userId: "user_12", status: "CANCELLED", paymentMethod: "COD", totalCost: 19290000, createdAt: new Date(currentYear, currentMonth, 2).getTime(),
-    shippingAddress: { fullName: "Tô N", phone: "0912", address: "Thanh Xuân", city: "Hà Nội" }, items: [] 
-  }
-];
-// =========================================================================
-
-// BẢNG 3 MÀU CHO 3 DANH MỤC: Điện thoại (Xanh), Laptop (Cam), Phụ kiện (Lục)
-const PIE_COLORS = ['#3b82f6', '#f59e0b', '#10b981'];
+// BẢNG MÀU CHO BIỂU ĐỒ TRÒN
+const PIE_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899'];
 
 const AdminDashboard = () => {
   const now = new Date();
@@ -84,36 +21,78 @@ const AdminDashboard = () => {
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [selectedYear, setSelectedYear] = useState(yyyy);
 
-  // 1. LỌC ĐƠN HÀNG THEO THỜI GIAN (Đổi orderDate thành createdAt)
+  // --- STATE LƯU DỮ LIỆU TỪ API ---
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // --- GỌI API LẤY TOÀN BỘ ĐƠN HÀNG ---
+  useEffect(() => {
+    const fetchAllOrders = async () => {
+      try {
+        setIsLoading(true);
+        // Thay đổi endpoint nếu backend của bạn cấu hình khác (VD: /orders hoặc /admin/orders)
+        const response = await api.get('/orders/my-orders'); 
+        // Đảm bảo luôn lưu mảng, tránh bị lỗi nếu API trả về null
+        setOrders(Array.isArray(response.data) ? response.data : (response.data?.data || []));
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu thống kê:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAllOrders();
+  }, []);
+
+  // =========================================================================
+  // 1. LỌC ĐƠN HÀNG THEO THỜI GIAN (Dùng cho KPI, Biểu đồ vùng, Top SP)
+  // =========================================================================
   const filteredOrders = useMemo(() => {
     const startTimestamp = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : 0;
     const endTimestamp = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : Infinity;
-    return mockOrders.filter(order => order.createdAt >= startTimestamp && order.createdAt <= endTimestamp);
-  }, [startDate, endDate]);
+    
+    return orders.filter(order => {
+      // Nếu order không có createdAt, coi như là 0 để không bị sập hàm Date
+      const orderTime = order.createdAt ? new Date(order.createdAt).getTime() : 0;
+      return orderTime >= startTimestamp && orderTime <= endTimestamp;
+    });
+  }, [startDate, endDate, orders]);
 
-  // 2. TÍNH TOÁN 4 Ô KPI (Đổi orderStatus thành status, totalAmount thành totalCost)
-  // GHI CHÚ: Doanh thu tính riêng cho các đơn có status === "SHIPPED"
+  // =========================================================================
+  // 2. TÍNH TOÁN 4 Ô KPI (Tổng doanh thu, Đã giao, Đang xử lý, Đã hủy)
+  // =========================================================================
   const stats = useMemo(() => {
     let revenue = 0, completed = 0, cancelled = 0, pending = 0;
+    
     filteredOrders.forEach(order => {
-      if (order.status === "SHIPPED") { revenue += order.totalCost; completed++; }
+      // Chỉ tính doanh thu cho đơn hàng thành công (Đã giao hoặc Đang giao)
+      if (order.status === "DELIVERED" || order.status === "SHIPPED") { 
+        revenue += (Number(order.totalCost) || 0); 
+        completed++; 
+      }
       else if (order.status === "CANCELLED") { cancelled++; }
       else if (order.status === "PROCESSING") { pending++; }
     });
+    
     return { revenue, completed, cancelled, pending };
   }, [filteredOrders]);
 
-  // 3. BIỂU ĐỒ KHU VỰC (AREA CHART - Lấy data từ SHIPPED)
+  // =========================================================================
+  // 3. BIỂU ĐỒ KHU VỰC (AREA CHART) - BIẾN ĐỘNG DOANH THU THEO NGÀY
+  // =========================================================================
   const lineChartData = useMemo(() => {
     const dataMap = {};
-    const shippedOrders = filteredOrders.filter(o => o.status === "SHIPPED");
+    const validOrders = filteredOrders.filter(o => o.status === "DELIVERED" || o.status === "SHIPPED");
     
-    shippedOrders.forEach(order => {
+    validOrders.forEach(order => {
+      if (!order.createdAt) return;
       const dateStr = new Date(order.createdAt).toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit' });
+      
       if (!dataMap[dateStr]) dataMap[dateStr] = 0;
-      dataMap[dateStr] += order.totalCost;
+      dataMap[dateStr] += (Number(order.totalCost) || 0);
     });
 
+    // Sắp xếp ngày từ cũ đến mới
     return Object.keys(dataMap)
       .sort((a, b) => { 
         const [dayA, monthA] = a.split('/');
@@ -123,62 +102,87 @@ const AdminDashboard = () => {
       .map(date => ({ date, "Doanh thu": dataMap[date] }));
   }, [filteredOrders, yyyy]);
 
-  // 4. BIỂU ĐỒ CỘT (ĐỎ)
+  // =========================================================================
+  // 4. BIỂU ĐỒ CỘT (BAR CHART) - DOANH THU 12 THÁNG TRONG NĂM
+  // Lấy thẳng từ mảng `orders` gốc để bỏ qua bộ lọc ngày tháng
+  // =========================================================================
   const barChartData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, i) => ({
       name: `Thg ${i + 1}`, "Doanh thu": 0
     }));
 
-    mockOrders.forEach(order => {
-      if (order.status === "SHIPPED") {
+    orders.forEach(order => {
+      if ((order.status === "DELIVERED" || order.status === "SHIPPED") && order.createdAt) {
         const d = new Date(order.createdAt);
         if (d.getFullYear() === selectedYear) {
-          months[d.getMonth()]["Doanh thu"] += order.totalCost;
+          months[d.getMonth()]["Doanh thu"] += (Number(order.totalCost) || 0);
         }
       }
     });
     return months;
-  }, [selectedYear]);
+  }, [selectedYear, orders]);
 
-  // 5. BIỂU ĐỒ TRÒN & TOP 5 SẢN PHẨM (Đọc dữ liệu theo giao diện IOrderItem)
+  // =========================================================================
+  // 5. BIỂU ĐỒ TRÒN & BÓC TÁCH TOP 5 SẢN PHẨM BÁN CHẠY NHẤT TỪ ORDER.ITEMS
+  // =========================================================================
   const { pieChartData, topProducts, totalPieValue } = useMemo(() => {
-    const catMap = { "Điện thoại": 0, "Laptop": 0, "Phụ kiện": 0 };
+    const catMap = {};
     const prodMap = {};
 
-    filteredOrders.filter(o => o.status === "SHIPPED").forEach(order => {
-      if (!order.items) return;
+    // Chỉ lấy sản phẩm từ các đơn hàng đã thanh toán / vận chuyển thành công
+    const validOrders = filteredOrders.filter(o => o.status === "DELIVERED" || o.status === "SHIPPED");
+
+    validOrders.forEach(order => {
+      // Kiểm tra an toàn xem order có mảng items không
+      if (!Array.isArray(order.items)) return;
 
       order.items.forEach(item => {
-        // Tái sử dụng ảnh từ file mockData.js (dummyAll) nếu item.image bị rỗng
-        const productData = dummyAll?.find(p => String(p.id) === String(item.product));
-        const itemThumb = item.image || productData?.thumbnail || productData?.images?.[0] || "https://placehold.co/100x100?text=SP";
+        // ID sản phẩm (An toàn lấy _id nếu nó bị populate thành object)
+        const rawProductId = typeof item.product === 'object' && item.product !== null 
+          ? (item.product._id || item.product.id) 
+          : item.product;
         
-        const itemRevenue = item.price * item.quantity;
-        
-        // Nhận diện Category để đưa vào biểu đồ tròn
-        let category = "Phụ kiện";
-        if (['11'].includes(String(item.product))) category = "Điện thoại";
-        else if (['12', '14'].includes(String(item.product))) category = "Laptop";
-        
-        if (catMap[category] !== undefined) {
-          catMap[category] += itemRevenue;
-        }
+        if (!rawProductId) return; // Bỏ qua nếu không có ID sản phẩm
 
-        // Tạo mảng nhóm Top 5
-        if (!prodMap[item.product]) {
-          prodMap[item.product] = { 
-            id: item.product, title: item.name, thumbnail: itemThumb, 
-            sold: 0, revenue: 0 
+        const safeQty = Number(item.quantity) || 1;
+        const safePrice = Number(item.price) || 0;
+        const itemRevenue = safeQty * safePrice;
+        
+        // --- PHÂN LOẠI DANH MỤC CHO BIỂU ĐỒ TRÒN (Keyword matching từ tên SP) ---
+        const itemNameLower = (item.name || "").toLowerCase();
+        let category = "Khác";
+        
+        if (itemNameLower.includes("iphone") || itemNameLower.includes("điện thoại") || itemNameLower.includes("samsung")) {
+          category = "Điện thoại";
+        } else if (itemNameLower.includes("macbook") || itemNameLower.includes("laptop") || itemNameLower.includes("asus") || itemNameLower.includes("hp")) {
+          category = "Laptop";
+        } else if (itemNameLower.includes("tai nghe") || itemNameLower.includes("chuột") || itemNameLower.includes("cáp") || itemNameLower.includes("sạc")) {
+          category = "Phụ kiện";
+        }
+        
+        if (catMap[category] === undefined) catMap[category] = 0;
+        catMap[category] += itemRevenue;
+
+        // --- BÓC TÁCH & GỘP SỐ LIỆU ĐỂ TÌM TOP SẢN PHẨM ---
+        if (!prodMap[rawProductId]) {
+          prodMap[rawProductId] = { 
+            id: rawProductId, 
+            title: item.name || "Sản phẩm không xác định", 
+            thumbnail: item.image || "https://placehold.co/100x100?text=SP", 
+            sold: 0, 
+            revenue: 0 
           };
         }
-        prodMap[item.product].sold += item.quantity;
-        prodMap[item.product].revenue += itemRevenue;
+        prodMap[rawProductId].sold += safeQty;
+        prodMap[rawProductId].revenue += itemRevenue;
       });
     });
 
+    // Chuyển object thành mảng cho biểu đồ Tròn
     const pieData = Object.keys(catMap).map(key => ({ name: key, value: catMap[key] }));
     const totalPieValue = pieData.reduce((sum, item) => sum + item.value, 0);
 
+    // Chuyển object thành mảng, SẮP XẾP giảm dần theo số lượng bán và LẤY TOP 5
     const top5 = Object.values(prodMap)
       .sort((a, b) => b.sold - a.sold) 
       .slice(0, 5); 
@@ -188,9 +192,18 @@ const AdminDashboard = () => {
 
   const formatCurrency = (value) => new Intl.NumberFormat("vi-VN").format(value) + " ₫";
 
+  // --- GIAO DIỆN CHỜ ---
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="text-gray-500 font-medium">Đang tổng hợp dữ liệu thống kê...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-10">
-      {/* HEADER & BỘ LỌC (GIỮ NGUYÊN UI) */}
+      {/* HEADER & BỘ LỌC THỜI GIAN */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Thống kê kinh doanh</h1>
@@ -245,7 +258,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* BIỂU ĐỒ KHU VỰC: GÓC CẠNH (LINEAR) VÀ CÓ MÀU NỀN */}
+      {/* BIỂU ĐỒ KHU VỰC: BIẾN ĐỘNG THEO NGÀY */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h3 className="text-base font-bold text-gray-900 uppercase tracking-wide mb-6">Biến động doanh thu theo ngày</h3>
         <div className="h-[350px] w-full">
@@ -267,7 +280,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* BIỂU ĐỒ CỘT: DOANH THU 12 THÁNG (ĐỎ) */}
+      {/* BIỂU ĐỒ CỘT: DOANH THU 12 THÁNG */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-base font-bold text-gray-900 uppercase tracking-wide">Doanh thu tổng quan theo tháng</h3>
@@ -304,10 +317,9 @@ const AdminDashboard = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={pieChartData.filter(d => d.value > 0)} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
-                      {pieChartData.filter(d => d.value > 0).map((entry, index) => {
-                        const originalIndex = pieChartData.findIndex(p => p.name === entry.name);
-                        return <Cell key={`cell-${index}`} fill={PIE_COLORS[originalIndex]} />;
-                      })}
+                      {pieChartData.filter(d => d.value > 0).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
                     </Pie>
                     <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                   </PieChart>
@@ -324,7 +336,7 @@ const AdminDashboard = () => {
                 return (
                   <div key={entry.name} className="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-3.5 h-3.5 rounded-full shadow-sm" style={{ backgroundColor: PIE_COLORS[index] }}></div>
+                      <div className="w-3.5 h-3.5 rounded-full shadow-sm" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }}></div>
                       <span className="font-semibold text-gray-700">{entry.name}</span>
                     </div>
                     <div className="text-right flex items-center gap-4">

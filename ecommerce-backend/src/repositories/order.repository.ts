@@ -3,7 +3,10 @@ import { IOrder, Order } from '../models/Order';
 export class OrderRepository {
   // Get all order
   async findAll(): Promise<IOrder[]> {
-    return await Order.find({}).populate('user').populate('items.product');
+    return await Order.find({})
+      .sort({ createdAt: -1 })
+      .populate('user')
+      .populate('items.product');
   }
 
 
@@ -13,8 +16,9 @@ export class OrderRepository {
   }
 
   // Get orders of 1 user
-  async findByUserId(userId: string): Promise<IOrder[]> {
-    return await Order.find({ userId: userId }).populate('items.product');
+  async findByUserId(userId?: string): Promise<IOrder[]> {
+    const filter = userId ? { userId } : {};
+    return await Order.find(filter).populate('items.product').sort({ createdAt: -1 });
   }
 
   // Create new order

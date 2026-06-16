@@ -27,7 +27,8 @@ export const getAllOrders = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const result = await getAllOrdersService(req.user._id.toString())
+    const userId = req.user.role==='admin'? undefined: req.user._id.toString();
+    const result = await getAllOrdersService(userId);
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching orders', error });
