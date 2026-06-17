@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { dummyAll, mockOrders } from "../../data/mockData";
 
-import axios from 'axios'
 import api from '../../api/axiosConfig'
 
 const TABS = [

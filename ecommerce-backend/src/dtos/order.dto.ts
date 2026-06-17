@@ -10,9 +10,9 @@ export interface OrderItemDto {
 // Address in order
 export interface ShippingAddressDto {
   fullName: string;
-    phone: string;
-    address: string;
-    city: string;
+  phone: string;
+  address: string;
+  city: string;
 }
 
 // Use for Create Order

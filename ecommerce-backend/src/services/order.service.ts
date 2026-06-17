@@ -6,12 +6,14 @@ import { ORDER_STATUSES, OrderStatus } from "../common/constants";
 import { MessageRepository } from '../repositories/message.repository';
 import { Types } from "mongoose";
 import { CartRepository } from "../repositories/cart.repository";
+import { ProductService } from "./product.service";
 
 
 const orderRepository = new OrderRepository();
 const productRepository = new ProductRepository();
 const messageRepository = new MessageRepository();
 const cartRepository = new CartRepository();
+const productService = new ProductService();
 
 export const createOrderService = async (userId:string, dto: CreateOrderDto) => {
     const { items, shippingAddress, paymentMethod } = dto;
@@ -24,6 +26,13 @@ export const createOrderService = async (userId:string, dto: CreateOrderDto) => 
       if (!product) {
         throw new Error(`Product with ID ${item.productId} not found`);
       }
+
+      await productService.decreaseStock(
+        item.productId,
+        item.colorSelected,
+        item.quantity
+      );
+
       totalCost += product.price * item.quantity;
 
       //tranfer before create
