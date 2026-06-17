@@ -1,5 +1,6 @@
 export interface OrderItemDto {
   productId: string;
+  cartItemId?: string; // Here need ? because we need check that item has already been the cart? or buy now (not in the cart)
   image?: string;
   quantity: number;
   price: number; // Price at the time order

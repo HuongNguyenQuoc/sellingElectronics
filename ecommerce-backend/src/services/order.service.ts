@@ -4,11 +4,14 @@ import { ProductRepository } from "../repositories/product.repository";
 import { AppError } from "../common/exceptions/AppError";
 import { ORDER_STATUSES, OrderStatus } from "../common/constants";
 import { MessageRepository } from '../repositories/message.repository';
+import { Types } from "mongoose";
+import { CartRepository } from "../repositories/cart.repository";
 
 
 const orderRepository = new OrderRepository();
 const productRepository = new ProductRepository();
 const messageRepository = new MessageRepository();
+const cartRepository = new CartRepository();
 
 export const createOrderService = async (userId:string, dto: CreateOrderDto) => {
     const { items, shippingAddress, paymentMethod } = dto;
@@ -51,6 +54,13 @@ export const createOrderService = async (userId:string, dto: CreateOrderDto) => 
       totalCost: totalCost
     });
 
+    const cartItemIds = items
+      .map((item) => item.cartItemId)
+      .filter((cartItemId): cartItemId is string => Boolean(cartItemId))
+      .filter((cartItemId) => Types.ObjectId.isValid(cartItemId))
+      .map((cartItemId) => new Types.ObjectId(cartItemId));
+
+    if (cartItemIds.length > 0) await cartRepository.removeItemsByIds(userId, cartItemIds);
 
     // save to Message
     await messageRepository.createMessage({
@@ -62,7 +72,6 @@ export const createOrderService = async (userId:string, dto: CreateOrderDto) => 
           totalAmount: totalCost
         }
     })
-
 
     return newOrder;
 };

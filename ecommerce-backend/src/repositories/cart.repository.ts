@@ -1,4 +1,4 @@
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { Cart, ICart } from '../models/Cart';
 /*
 A hydratedDocument has Mongoose methods like:
@@ -45,6 +45,23 @@ export class CartRepository {
           "items": []
        }
       */
+    ).populate({
+      path: 'items.product',
+      select: 'title price thumbnail variants brandName',
+    });
+  }
+
+  async removeItemsByIds(userId: string, itemIds: Types.ObjectId[]) {
+    return await Cart.findOneAndUpdate(
+      { user: userId},
+      {
+        $pull: {
+          items: {
+            _id: { $in: itemIds },
+          },
+        },
+      },
+      { new: true }
     ).populate({
       path: 'items.product',
       select: 'title price thumbnail variants brandName',

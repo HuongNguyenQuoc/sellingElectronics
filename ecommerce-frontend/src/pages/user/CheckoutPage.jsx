@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 
-import axios from 'axios'
 import api from '../../api/axiosConfig'
 
 const CheckoutPage = () => {
@@ -41,6 +40,7 @@ const CheckoutPage = () => {
     await api.post("/orders", {
       items: checkoutItems.map((item) => ({
         productId: item.product,
+        cartItemId: isBuyNow ? undefined : item.cartItemId,
         image: item.thumbnail,
         quantity: item.quantity,
         price: item.price,
