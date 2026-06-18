@@ -4,7 +4,6 @@ export interface IShippingAddress{
     fullName: string;
     phone: string;
     address: string;
-    city: string;
 }
 
 export const ShippingAddressSchema = new mongoose.Schema<IShippingAddress>({
@@ -26,8 +25,4 @@ export const ShippingAddressSchema = new mongoose.Schema<IShippingAddress>({
         type: String,
         required: true 
     },
-    city: { 
-        type: String, 
-        required: true 
-    }
 });

@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
 
 // This middleware will protect routes that require authentication by verifying the JWT token
 // and attaching the user information to the request object.
-const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const protect = async (req: AuthRequest, _res: Response, next: NextFunction) => {
   let token: string | undefined;
 
   // Check for token in Authorization header
