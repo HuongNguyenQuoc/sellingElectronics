@@ -67,7 +67,10 @@ export class ProductService {
     }
 
     const product = await this.getProductById(productId);
-    const variants = product.variants.map(variant => ({ ...variant })); // Here it just like one version of copy each object in product.variants, and important thing remember that use () before { ...variant }. Without JS will understand that {} is body of function, not object return
+    const variants = product.variants.map(variant => ({
+      color: variant.color,
+      stock: variant.stock,
+    })); // Here it just like one version of copy each object in product.variants, and important thing remember that use () before { ...variant }. Without JS will understand that {} is body of function, not object return
     const variant = variants.find(item => item.color === color);
 
     if (!variant) {
