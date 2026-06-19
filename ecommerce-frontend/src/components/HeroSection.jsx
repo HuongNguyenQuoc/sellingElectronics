@@ -1,4 +1,59 @@
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useProducts } from "../hooks/useProducts";
+import { getProductId } from "../utils/productUtils";
+
+const normalizeText = (value = "") =>
+  value
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const getSearchText = (product) =>
+  normalizeText(
+    `${product?.title || ""} ${product?.brandName || ""} ${
+      Array.isArray(product?.tags) ? product.tags.join(" ") : ""
+    }`,
+  );
+
+const getProductPath = (product, fallbackPath) => {
+  const productId = getProductId(product);
+  return productId ? `/product/${productId}` : fallbackPath;
+};
+
 const HeroSection = () => {
+  const { products } = useProducts();
+
+  const promoProducts = useMemo(() => {
+    const productsWithSearchText = products.map((product) => ({
+      product,
+      searchText: getSearchText(product),
+    }));
+
+    const findByTerms = (...terms) => {
+      const normalizedTerms = terms.map(normalizeText);
+      return productsWithSearchText.find(({ searchText }) =>
+        normalizedTerms.every((term) => searchText.includes(term)),
+      )?.product;
+    };
+
+    const gamingLaptop = productsWithSearchText.find(({ searchText }) => {
+      return (
+        searchText.includes("laptop") &&
+        (searchText.includes("gaming") ||
+          searchText.includes("rog") ||
+          searchText.includes("asus"))
+      );
+    })?.product;
+
+    return {
+      galaxyS24: findByTerms("galaxy", "s24") || findByTerms("samsung", "s24"),
+      macbookAirM3: findByTerms("macbook", "m3") || findByTerms("macbook air"),
+      gamingLaptop,
+    };
+  }, [products]);
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[500px]">
@@ -22,9 +77,12 @@ const HeroSection = () => {
               Trải nghiệm sức mạnh của AI đỉnh cao với hệ thống camera mắt thần
               bóng đêm cực nét.
             </p>
-            <button className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-full w-fit transition-all transform hover:scale-105 shadow-lg">
+            <Link
+              to={getProductPath(promoProducts.galaxyS24, "/phones")}
+              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-full w-fit transition-all transform hover:scale-105 shadow-lg"
+            >
               Khám Phá Ngay
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -46,9 +104,12 @@ const HeroSection = () => {
               <p className="text-gray-300 text-xs mb-4 drop-shadow-md">
                 Cấu hình đỉnh cao, làm việc hiệu quả hơn bao giờ hết.
               </p>
-              <button className="text-sm font-bold border-b-2 border-white text-white w-fit hover:text-yellow-400 hover:border-yellow-400 transition-colors">
+              <Link
+                to={getProductPath(promoProducts.macbookAirM3, "/laptops")}
+                className="text-sm font-bold border-b-2 border-white text-white w-fit hover:text-yellow-400 hover:border-yellow-400 transition-colors"
+              >
                 Xem chi tiết
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -68,9 +129,12 @@ const HeroSection = () => {
               <p className="text-gray-300 text-xs mb-4 drop-shadow-md">
                 Phá vỡ mọi giới hạn với đồ họa mạnh mẽ đỉnh cao.
               </p>
-              <button className="text-sm font-bold border-b-2 border-white text-white w-fit hover:text-yellow-400 hover:border-yellow-400 transition-colors">
+              <Link
+                to={getProductPath(promoProducts.gamingLaptop, "/laptops")}
+                className="text-sm font-bold border-b-2 border-white text-white w-fit hover:text-yellow-400 hover:border-yellow-400 transition-colors"
+              >
                 Xem chi tiết
-              </button>
+              </Link>
             </div>
           </div>
         </div>

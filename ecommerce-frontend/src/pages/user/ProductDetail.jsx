@@ -18,6 +18,28 @@ const getProductVariants = (product) => {
   }));
 };
 
+const getProductImages = (product) => {
+  if (!Array.isArray(product?.images)) return [];
+  return product.images.filter(Boolean);
+};
+
+const getVariantImage = (product, color) => {
+  const variants = getProductVariants(product);
+  const variantIndex = variants.findIndex((variant) => variant.color === color);
+  const selectedVariant = variants[variantIndex];
+  const images = getProductImages(product);
+
+  return (
+    selectedVariant?.image ||
+    selectedVariant?.thumbnail ||
+    selectedVariant?.images?.[0] ||
+    images[variantIndex] ||
+    images[0] ||
+    product?.thumbnail ||
+    ""
+  );
+};
+
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -42,11 +64,12 @@ const ProductDetail = () => {
 
         const productFromApi = await getProductById(id);
         const variants = getProductVariants(productFromApi);
+        const initialColor = variants[0]?.color || "";
 
         if (isMounted) {
           setProduct(productFromApi);
-          setMainImage(productFromApi.images?.[0] || productFromApi.thumbnail || "");
-          setSelectedColor(variants[0]?.color || "");
+          setSelectedColor(initialColor);
+          setMainImage(getVariantImage(productFromApi, initialColor));
           setQuantity(1);
         }
       } catch (err) {
@@ -88,6 +111,10 @@ const ProductDetail = () => {
   const variants = getProductVariants(product);
   const selectedVariant = variants.find((variant) => variant.color === selectedColor);
   const currentStock = selectedVariant?.stock || 0;
+  const galleryImages = [
+    getVariantImage(product, selectedColor),
+    ...getProductImages(product),
+  ].filter((image, index, images) => image && images.indexOf(image) === index);
 
   const formatPrice = (price) => new Intl.NumberFormat("vi-VN").format(price) + "đ";
   const originalPrice = product.discountPercentage
@@ -97,6 +124,12 @@ const ProductDetail = () => {
   const handleQuantityChange = (type) => {
     if (type === "minus" && quantity > 1) setQuantity(quantity - 1);
     if (type === "plus" && quantity < currentStock) setQuantity(quantity + 1);
+  };
+
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+    setMainImage(getVariantImage(product, color));
+    setQuantity(1);
   };
 
   const validatePurchase = () => {
@@ -124,7 +157,7 @@ const ProductDetail = () => {
     const itemToBuy = {
       product: product._id,
       title: product.title,
-      thumbnail: product.thumbnail,
+      thumbnail: mainImage || product.thumbnail,
       price: product.price,
       quantity,
       colorSelected: selectedColor || "Mặc định",
@@ -179,7 +212,7 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {product.images?.map((img, index) => (
+              {galleryImages.map((img, index) => (
                 <button
                   type="button"
                   key={index}
@@ -246,10 +279,7 @@ const ProductDetail = () => {
                     <button
                       type="button"
                       key={variant.color}
-                      onClick={() => {
-                        setSelectedColor(variant.color);
-                        setQuantity(1);
-                      }}
+                      onClick={() => handleColorSelect(variant.color)}
                       className={`px-5 py-2 rounded-lg text-sm font-medium transition-all border ${
                         selectedColor === variant.color
                           ? "border-[#e30019] text-[#e30019] bg-red-50"
