@@ -27,6 +27,7 @@ const AdminLayout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
+    window.dispatchEvent(new Event("auth-changed"));
     // Hiện tại chỉ làm giao diện frontend, giữ nguyên không chuyển trang
     setIsLogoutModalOpen(false);
     navigate("/", { replace: true }); // Without Replace, when user hit Back won't be back the home page.

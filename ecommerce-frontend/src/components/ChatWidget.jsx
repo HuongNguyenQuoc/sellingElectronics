@@ -3,26 +3,39 @@ import OrderCard from "./OrderCard"; // Đảm bảo đường dẫn này đúng
 import api from '../api/axiosConfig'
 import socket from "../api/socket";
 
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user"));
+  } catch {
+    return null;
+  }
+};
+
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [connectionError, setConnectionError] = useState("");
   const [inputMessage, setInputMessage] = useState("");
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user"));
-    } catch {
-      return null;
-    }
-  });
+  const [currentUser, setCurrentUser] = useState(getStoredUser);
 
   const messagesEndRef = useRef(null);
 
+  useEffect(() => {
+    const syncCurrentUser = () => setCurrentUser(getStoredUser());
+
+    window.addEventListener("auth-changed", syncCurrentUser);
+    window.addEventListener("storage", syncCurrentUser);
+
+    return () => {
+      window.removeEventListener("auth-changed", syncCurrentUser);
+      window.removeEventListener("storage", syncCurrentUser);
+    };
+  }, []);
 
   //get old messages
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser?._id) return;
 
     const fetchMessages = async () => {
       try {
@@ -48,7 +61,7 @@ const ChatWidget = () => {
 
   // Lắng nghe sự kiện 'toggleChat' từ bất cứ đâu
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser?._id) return;
 
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
@@ -183,7 +196,11 @@ const ChatWidget = () => {
                 <span className="font-bold text-[15px] text-white leading-tight">TechVolt Support</span>
                 <span className="text-[11px] text-gray-300 flex items-center gap-1">
                   <span className={`w-1.5 h-1.5 rounded-full inline-block ${isConnected ? "bg-green-400" : "bg-red-400"}`}></span>
-                  {isConnected ? "Đang hoạt động" : "Đang kết nối..."}
+                  {!currentUser?._id
+                    ? "Vui lòng đăng nhập"
+                    : isConnected
+                      ? "Đang hoạt động"
+                      : "Đang kết nối..."}
                 </span>
               </div>
             </div>
@@ -280,7 +297,7 @@ const ChatWidget = () => {
                 type="text"
                 placeholder="Nhập tin nhắn..."
                 value={inputMessage}
-                disabled={!isConnected}
+                disabled={!isConnected || !currentUser?._id}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleSendMessage();
@@ -290,7 +307,7 @@ const ChatWidget = () => {
             </div>
             <button 
               onClick={handleSendMessage}
-              disabled={!isConnected || !inputMessage.trim()}
+              disabled={!isConnected || !currentUser?._id || !inputMessage.trim()}
               className="w-9 h-9 flex items-center justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full transition-transform hover:scale-110 shadow-sm shrink-0 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:scale-100">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 ml-0.5">
                 <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />

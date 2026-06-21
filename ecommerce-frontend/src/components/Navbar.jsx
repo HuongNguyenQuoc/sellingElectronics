@@ -56,6 +56,7 @@ const Navbar = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
+    window.dispatchEvent(new Event("auth-changed"));
     setUser(null);
     navigate("/");
   };
