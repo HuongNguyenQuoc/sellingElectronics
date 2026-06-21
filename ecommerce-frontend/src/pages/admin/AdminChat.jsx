@@ -1,13 +1,8 @@
   import { useState, useRef, useEffect } from "react";
-  import { io } from "socket.io-client";
-  // LỖI 1: Import trực tiếp dữ liệu từ file mockData nguồn gốc của bạn
-  import { mockUsers, mockMessages } from "../../data/mockData";
   import OrderCard from "../../components/OrderCard";
 
-  import axios from 'axios'
   import api from '../../api/axiosConfig'
-
-  const socket = io("http://localhost:3000");
+  import socket from "../../api/socket";
 
   // HÀM TẠO MÀU NỀN AVATAR THEO TÊN KHÁCH HÀNG
   const getAvatarColor = (name) => {
@@ -25,6 +20,7 @@
     const [conversations, setConversations] = useState([]);
     const [messages, setMessages] = useState([]);
     const [activeUserId, setActiveUserId] = useState(null);
+    const [isConnected, setIsConnected] = useState(socket.connected);
 
     // --- CÁC STATE QUẢN LÝ ---
     const [inputText, setInputText] = useState("");
@@ -84,19 +80,19 @@
 
   // connect socket
   useEffect(() => {
-    if (!socket.connected) {
-      socket.connect();
-    }    
-    // Join admin room so that users can send messages to admin
-    socket.emit("john_room", { userId: "admin" });
-
     socket.on("connect", () => {
       console.log("Admin socket connected:", socket.id);
+      setIsConnected(true);
       socket.emit("john_room", { userId: "admin" });
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false);
     });
 
     socket.on("connect_error", (error) => {
       console.error("Socket connect error:", error.message);
+      setIsConnected(false);
     });
 
     socket.on("receive_message", (message) => {
@@ -111,12 +107,20 @@
       console.error(error);
     });
 
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      socket.emit("john_room", { userId: "admin" });
+    }
+
     return () => {
       socket.off("connect");
+      socket.off("disconnect");
       socket.off("connect_error");
       socket.off("receive_message");
       socket.off("message_sent");
       socket.off("message_error");
+      socket.disconnect();
     };
   }, []);
 
@@ -151,7 +155,7 @@
 
     const handleSendMessage = (e) => {
       e.preventDefault();
-      if (!inputText.trim()) return;
+      if (!inputText.trim() || !activeUserId || !isConnected) return;
       const messagePayload = {
         conversationId: activeUserId,
         senderId: "admin",
@@ -246,8 +250,10 @@
                 <div>
                   <h2 className="font-bold text-gray-800">{activeUser.userName}</h2>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    <span className="text-xs text-gray-500 font-medium">Đang hoạt động</span>
+                    <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}></span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {isConnected ? "Đã kết nối" : "Mất kết nối chat"}
+                    </span>
                     <span className="text-xs text-gray-300 mx-1">•</span>
                     <span className="text-xs text-gray-400">{activeUser.phoneNumber}</span>
                   </div>
@@ -315,7 +321,7 @@
                 <button 
                   type="submit" 
                   className={`p-3 rounded-2xl transition-all ${inputText.trim() ? "bg-yellow-400 text-gray-900 hover:bg-yellow-500 shadow-sm" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
-                  disabled={!inputText.trim()}
+                  disabled={!inputText.trim() || !isConnected}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />

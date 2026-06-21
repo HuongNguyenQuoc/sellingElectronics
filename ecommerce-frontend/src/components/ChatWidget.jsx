@@ -1,20 +1,21 @@
-import { io } from "socket.io-client";
-
 import { useState, useEffect, useRef } from "react";
-import { dummyMessages } from "../data/mockData"; // Import dữ liệu từ mockData
 import OrderCard from "./OrderCard"; // Đảm bảo đường dẫn này đúng với nơi bạn lưu OrderCard
 import api from '../api/axiosConfig'
-
-const socket = io("http://localhost:3000");
+import socket from "../api/socket";
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
-
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  const [connectionError, setConnectionError] = useState("");
   const [inputMessage, setInputMessage] = useState("");
-  const currentUser = JSON.parse(
-        localStorage.getItem("user")
-      );
+  const [currentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  });
 
   const messagesEndRef = useRef(null);
 
@@ -34,7 +35,7 @@ const ChatWidget = () => {
     };
 
     fetchMessages();
-  }, [currentUser?._id]);
+  }, [currentUser]);
 
   useEffect(() => {
     if (isOpen) {
@@ -49,23 +50,23 @@ const ChatWidget = () => {
   useEffect(() => {
     if (!currentUser) return;
 
-    if (!socket.connected) {
-      socket.connect();
-    }
-
-    socket.emit("john_room", {
-      userId: currentUser._id
-    });
-
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
+      setIsConnected(true);
+      setConnectionError("");
       socket.emit("john_room", {
         userId: currentUser._id
       });
     });
 
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+    });
+
     socket.on("connect_error", (error) => {
       console.error("Socket connect error:", error.message);
+      setIsConnected(false);
+      setConnectionError("Không thể kết nối tới máy chủ chat");
     });
 
     socket.on("receive_message", (message) => {
@@ -80,19 +81,26 @@ const ChatWidget = () => {
       console.error(error);
     });
 
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      socket.emit("john_room", { userId: currentUser._id });
+    }
+
     return () => {
       socket.off("connect");
+      socket.off("disconnect");
       socket.off("connect_error");
       socket.off("receive_message");
       socket.off("message_sent");
       socket.off("message_error");
+      socket.disconnect();
     };
-  }, []);
+  }, [currentUser]);
 
   //send message
   const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
-    if (!currentUser) return;
+    if (!inputMessage.trim() || !currentUser || !isConnected) return;
 
     const messagePayload = {
       conversationId: currentUser._id,
@@ -174,8 +182,8 @@ const ChatWidget = () => {
               <div className="flex flex-col">
                 <span className="font-bold text-[15px] text-white leading-tight">TechVolt Support</span>
                 <span className="text-[11px] text-gray-300 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
-                  Đang hoạt động
+                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${isConnected ? "bg-green-400" : "bg-red-400"}`}></span>
+                  {isConnected ? "Đang hoạt động" : "Đang kết nối..."}
                 </span>
               </div>
             </div>
@@ -193,7 +201,18 @@ const ChatWidget = () => {
           {/* Body Chat */}
           <div className="h-80 p-4 bg-gray-50 overflow-y-auto flex flex-col gap-4">
 
-            {/* DÙNG VÒNG LẶP ĐỂ VẼ TOÀN BỘ TIN NHẮN TỪ MOCK DATA */}
+            {connectionError && (
+              <div className="text-center text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                {connectionError}. Vui lòng thử lại sau.
+              </div>
+            )}
+
+            {isConnected && messages.length === 0 && (
+              <div className="flex-1 flex items-center justify-center text-center text-sm text-gray-400 px-6">
+                Chưa có tin nhắn. Hãy gửi lời nhắn đầu tiên cho TechVolt nhé.
+              </div>
+            )}
+
             {messages.map((msg,index) => {
               const isAdmin = msg.senderId === "admin";
               const showTimestamp = shouldShowTimestamp(
@@ -261,16 +280,18 @@ const ChatWidget = () => {
                 type="text"
                 placeholder="Nhập tin nhắn..."
                 value={inputMessage}
+                disabled={!isConnected}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleSendMessage();
                 }}
-                className="bg-transparent flex-1 focus:outline-none text-[14px] text-gray-700"
+                className="bg-transparent flex-1 focus:outline-none text-[14px] text-gray-700 disabled:cursor-not-allowed"
               />
             </div>
             <button 
               onClick={handleSendMessage}
-              className="w-9 h-9 flex items-center justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full transition-transform hover:scale-110 shadow-sm shrink-0">
+              disabled={!isConnected || !inputMessage.trim()}
+              className="w-9 h-9 flex items-center justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full transition-transform hover:scale-110 shadow-sm shrink-0 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:scale-100">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 ml-0.5">
                 <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
               </svg>
