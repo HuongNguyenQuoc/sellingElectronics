@@ -7,34 +7,29 @@ import express, { type Express, type Request, type Response } from 'express';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 
-
-import orderRoutes from './routes/orderRoutes';
 import conversationRoutes from './routes/conversationRoutes';
+import orderRoutes from './routes/orderRoutes';
 
 import { connectDB } from './config/db';
 import { errorHandler, notFound } from './middlewares/errorMiddleware';
-import authRoutes from './routes/authRoutes';
-import productRoutes from './routes/productRoutes';
-import messageRoutes from './routes/messageRoutes'
 import { IMessage } from './models/Message';
-import { sendMessageService } from './services/message.service';
+import authRoutes from './routes/authRoutes';
+import messageRoutes from './routes/messageRoutes';
+import productRoutes from './routes/productRoutes';
 import { createOrUpdateConversationService } from './services/conversation.service';
+import { sendMessageService } from './services/message.service';
 
 import dns from 'dns';
-
-
-dns.setServers([
-  '8.8.8.8',
-  '8.8.4.4'
-]);
 import cartRoutes from './routes/cartRoutes';
+
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 dotenv.config();
 // Load environment variables from .env file into process.env . Ex: console.log(process.env.MONGO_URI) to check if it's loaded correctly
 
 const app: Express = express();
 const PORT = Number(process.env.PORT) || 3000;
-const FRONTEND_URL = 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 //Middlewares
 app.use(cors());
@@ -73,10 +68,10 @@ const io = new SocketIOServer(server, {
   },
 });
 
-io.on('connection', (socket) => {
+io.on('connection', socket => {
   console.log('Connected');
 
-  socket.on('john_room',(data) =>{
+  socket.on('john_room', data => {
     const { userId } = data;
     console.log(`User ${userId} connected with socket ID: ${socket.id}`);
     socket.join(userId);
@@ -84,28 +79,30 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_message', async (data: IMessage) => {
-      try{
-        console.log('chạy vào oke');
-        const messageData = await sendMessageService(data)
-        await createOrUpdateConversationService({
-            lastMessage: data.content
-        },data.conversationId);
-        // Emit the message to the receiver's room
-        io.to(data.receiverId).emit('receive_message',messageData);
-        socket.emit('message_sent',messageData);
-      }catch(error){
-        console.error('Send message error:', error);
-        console.log(error);
-        socket.emit('message_error',{
-          message:'Send message failed'
-        });
-      }
+    try {
+      console.log('chạy vào oke');
+      const messageData = await sendMessageService(data);
+      await createOrUpdateConversationService(
+        {
+          lastMessage: data.content,
+        },
+        data.conversationId
+      );
+      // Emit the message to the receiver's room
+      io.to(data.receiverId).emit('receive_message', messageData);
+      socket.emit('message_sent', messageData);
+    } catch (error) {
+      console.error('Send message error:', error);
+      console.log(error);
+      socket.emit('message_error', {
+        message: 'Send message failed',
+      });
+    }
   });
 
   socket.on('disconnect', () => {
     console.log('Disconnected');
   });
-
 });
 
 const startServer = async (): Promise<void> => {
