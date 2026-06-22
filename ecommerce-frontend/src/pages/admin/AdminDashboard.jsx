@@ -78,33 +78,48 @@ const AdminDashboard = () => {
   }, [filteredOrders]);
 
   // =========================================================================
-  // 3. BIỂU ĐỒ KHU VỰC (AREA CHART) - BIẾN ĐỘNG DOANH THU THEO NGÀY
+  // 3. BIỂU ĐỒ KHU VỰC (AREA CHART) - TUẦN TỰ ĐẾN NGÀY HÔM NAY
   // =========================================================================
   const lineChartData = useMemo(() => {
-    const dataMap = {};
+    // 3.1. Gom tổng doanh thu thực tế theo chuỗi ngày "DD/MM"
+    const revenueMap = {};
     const validOrders = filteredOrders.filter(o => o.status === "DELIVERED" || o.status === "SHIPPED");
     
     validOrders.forEach(order => {
       if (!order.createdAt) return;
       const dateStr = new Date(order.createdAt).toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit' });
-      
-      if (!dataMap[dateStr]) dataMap[dateStr] = 0;
-      dataMap[dateStr] += (Number(order.totalCost) || 0);
+      if (!revenueMap[dateStr]) revenueMap[dateStr] = 0;
+      revenueMap[dateStr] += (Number(order.totalCost) || 0);
     });
 
-    // Sắp xếp ngày từ cũ đến mới
-    return Object.keys(dataMap)
-      .sort((a, b) => { 
-        const [dayA, monthA] = a.split('/');
-        const [dayB, monthB] = b.split('/');
-        return new Date(yyyy, monthA - 1, dayA) - new Date(yyyy, monthB - 1, dayB);
-      })
-      .map(date => ({ date, "Doanh thu": dataMap[date] }));
-  }, [filteredOrders, yyyy]);
+    // 3.2. Tạo trục X liên tục từ startDate đến endDate (Không bỏ sót ngày nào)
+    const result = [];
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const currentDate = new Date(start);
+
+    // Vòng lặp từng ngày một
+    while (currentDate <= end) {
+      const dateStr = currentDate.toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit' });
+      
+      result.push({
+        date: dateStr,
+        "Doanh thu": revenueMap[dateStr] || 0 // Nếu ngày này ko có đơn thì bằng 0
+      });
+      
+      // Tăng thêm 1 ngày
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return result;
+  }, [startDate, endDate, filteredOrders]);
 
   // =========================================================================
   // 4. BIỂU ĐỒ CỘT (BAR CHART) - DOANH THU 12 THÁNG TRONG NĂM
-  // Lấy thẳng từ mảng `orders` gốc để bỏ qua bộ lọc ngày tháng
   // =========================================================================
   const barChartData = useMemo(() => {
     const months = Array.from({ length: 12 }, (_, i) => ({
@@ -123,32 +138,28 @@ const AdminDashboard = () => {
   }, [selectedYear, orders]);
 
   // =========================================================================
-  // 5. BIỂU ĐỒ TRÒN & BÓC TÁCH TOP 5 SẢN PHẨM BÁN CHẠY NHẤT TỪ ORDER.ITEMS
+  // 5. BIỂU ĐỒ TRÒN & TOP 5 SẢN PHẨM BÁN CHẠY NHẤT
   // =========================================================================
   const { pieChartData, topProducts, totalPieValue } = useMemo(() => {
     const catMap = {};
     const prodMap = {};
 
-    // Chỉ lấy sản phẩm từ các đơn hàng đã thanh toán / vận chuyển thành công
     const validOrders = filteredOrders.filter(o => o.status === "DELIVERED" || o.status === "SHIPPED");
 
     validOrders.forEach(order => {
-      // Kiểm tra an toàn xem order có mảng items không
       if (!Array.isArray(order.items)) return;
 
       order.items.forEach(item => {
-        // ID sản phẩm (An toàn lấy _id nếu nó bị populate thành object)
         const rawProductId = typeof item.product === 'object' && item.product !== null 
           ? (item.product._id || item.product.id) 
           : item.product;
         
-        if (!rawProductId) return; // Bỏ qua nếu không có ID sản phẩm
+        if (!rawProductId) return; 
 
         const safeQty = Number(item.quantity) || 1;
         const safePrice = Number(item.price) || 0;
         const itemRevenue = safeQty * safePrice;
         
-        // --- PHÂN LOẠI DANH MỤC CHO BIỂU ĐỒ TRÒN (Keyword matching từ tên SP) ---
         const itemNameLower = (item.name || "").toLowerCase();
         let category = "Khác";
         
@@ -163,7 +174,6 @@ const AdminDashboard = () => {
         if (catMap[category] === undefined) catMap[category] = 0;
         catMap[category] += itemRevenue;
 
-        // --- BÓC TÁCH & GỘP SỐ LIỆU ĐỂ TÌM TOP SẢN PHẨM ---
         if (!prodMap[rawProductId]) {
           prodMap[rawProductId] = { 
             id: rawProductId, 
@@ -178,11 +188,9 @@ const AdminDashboard = () => {
       });
     });
 
-    // Chuyển object thành mảng cho biểu đồ Tròn
     const pieData = Object.keys(catMap).map(key => ({ name: key, value: catMap[key] }));
     const totalPieValue = pieData.reduce((sum, item) => sum + item.value, 0);
 
-    // Chuyển object thành mảng, SẮP XẾP giảm dần theo số lượng bán và LẤY TOP 5
     const top5 = Object.values(prodMap)
       .sort((a, b) => b.sold - a.sold) 
       .slice(0, 5); 
