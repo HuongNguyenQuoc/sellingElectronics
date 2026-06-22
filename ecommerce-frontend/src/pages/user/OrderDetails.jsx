@@ -1,17 +1,16 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { dummyAll, mockOrders } from "../../data/mockData";
 
 import { useState, useEffect } from "react";
 
-import axios from 'axios'
 import api from '../../api/axiosConfig'
+import { getProductId } from "../../utils/productUtils";
 
 const OrderDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
   const fetchOrder = async () => {
@@ -31,6 +30,13 @@ const OrderDetails = () => {
   fetchOrder();
   }, [id]);
 
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] bg-[#f4f6f8] flex items-center justify-center font-sans">
+        <p className="text-gray-500 font-medium">Đang tải đơn hàng...</p>
+      </div>
+    );
+  }
 
   // Nếu không tìm thấy đơn hàng
   if (!order) {
@@ -195,16 +201,33 @@ const OrderDetails = () => {
             {/* Danh sách Item */}
             <div className="p-6 space-y-6">
               {order.items.map((item, index) => {
+                const productId = getProductId(item.product);
+                const productImage = (
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                );
+
                 return (
                   <div key={index} className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                    <Link to={`/product/${item.product._id}`} className="w-20 h-20 bg-white border border-gray-200 rounded-lg p-1.5 flex-shrink-0 hover:border-gray-300 transition-colors">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
-                    </Link>
+                    {productId ? (
+                      <Link to={`/product/${productId}`} className="w-20 h-20 bg-white border border-gray-200 rounded-lg p-1.5 flex-shrink-0 hover:border-gray-300 transition-colors">
+                        {productImage}
+                      </Link>
+                    ) : (
+                      <div className="w-20 h-20 bg-white border border-gray-200 rounded-lg p-1.5 flex-shrink-0">
+                        {productImage}
+                      </div>
+                    )}
                     
                     <div className="flex-1 min-w-0">
-                      <Link to={`/product/${item.product._id}`} className="text-[15px] font-semibold text-gray-900 hover:text-[#e30019] line-clamp-2 transition-colors">
-                        {item.name}
-                      </Link>
+                      {productId ? (
+                        <Link to={`/product/${productId}`} className="text-[15px] font-semibold text-gray-900 hover:text-[#e30019] line-clamp-2 transition-colors">
+                          {item.name}
+                        </Link>
+                      ) : (
+                        <span className="text-[15px] font-semibold text-gray-900 line-clamp-2">
+                          {item.name}
+                        </span>
+                      )}
                       <div className="flex flex-wrap items-center gap-4 mt-1.5 text-sm text-gray-500">
                         <span>Phân loại: {item.colorSelected}</span>
                         <span>x{item.quantity}</span>

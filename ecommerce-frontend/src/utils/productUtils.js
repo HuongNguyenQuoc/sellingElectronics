@@ -8,7 +8,10 @@ export const ACCESSORY_TAGS = [
   "accessory",
 ];
 
-export const getProductId = (product) => product?._id || product?.id;
+export const getProductId = (product) => {
+  if (typeof product === "string") return product;
+  return product?._id || product?.id;
+};
 
 export const hasTag = (product, tag) => {
   return Array.isArray(product?.tags) && product.tags.includes(tag);
