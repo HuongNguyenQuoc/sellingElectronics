@@ -163,7 +163,7 @@ const AdminDashboard = () => {
         const itemNameLower = (item.name || "").toLowerCase();
         let category = "Khác";
         
-        if (itemNameLower.includes("iphone") || itemNameLower.includes("điện thoại") || itemNameLower.includes("samsung")) {
+        if (itemNameLower.includes("iphone") || itemNameLower.includes("điện thoại") || itemNameLower.includes("samsung")|| itemNameLower.includes("smartphone"))  {
           category = "Điện thoại";
         } else if (itemNameLower.includes("macbook") || itemNameLower.includes("laptop") || itemNameLower.includes("asus") || itemNameLower.includes("hp")) {
           category = "Laptop";
