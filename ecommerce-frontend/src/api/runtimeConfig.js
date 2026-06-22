@@ -4,8 +4,7 @@ export const API_URL = trimTrailingSlashes(
   import.meta.env.VITE_API_URL?.trim() || "http://localhost:3000/api",
 );
 
-// Socket.IO is served by the same Render service as the REST API. VITE_SOCKET_URL
-// remains available as an override, but normally VITE_API_URL is all we need.
-export const SOCKET_URL = trimTrailingSlashes(
-  import.meta.env.VITE_SOCKET_URL?.trim() || API_URL.replace(/\/api$/, ""),
-);
+// Socket.IO and the REST API are served by the same backend. Deriving this URL
+// prevents an old VITE_SOCKET_URL deployment setting from sending chat traffic
+// to a different server or port.
+export const SOCKET_URL = API_URL.replace(/\/api$/, "");

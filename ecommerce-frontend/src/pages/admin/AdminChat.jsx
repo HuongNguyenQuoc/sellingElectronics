@@ -21,6 +21,7 @@
     const [messages, setMessages] = useState([]);
     const [activeUserId, setActiveUserId] = useState(null);
     const [isConnected, setIsConnected] = useState(socket.connected);
+    const [connectionError, setConnectionError] = useState("");
 
     // --- CÁC STATE QUẢN LÝ ---
     const [inputText, setInputText] = useState("");
@@ -86,15 +87,22 @@
     socket.on("connect", () => {
       console.log("Admin socket connected:", socket.id);
       setIsConnected(true);
+      setConnectionError("");
     });
 
     socket.on("disconnect", () => {
       setIsConnected(false);
+      setConnectionError("");
     });
 
     socket.on("connect_error", (error) => {
       console.error("Socket connect error:", error.message);
       setIsConnected(false);
+      setConnectionError(
+        error.message === "Unauthorized"
+          ? "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại"
+          : "Đang thử kết nối lại..."
+      );
     });
 
     socket.on("receive_message", (message) => {
@@ -257,9 +265,17 @@
                 <div>
                   <h2 className="font-bold text-gray-800">{activeUser.userName}</h2>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}></span>
+                    <span className={`w-2 h-2 rounded-full ${
+                      isConnected
+                        ? "bg-green-500"
+                        : connectionError.includes("hết hạn")
+                          ? "bg-red-500"
+                          : "bg-yellow-500 animate-pulse"
+                    }`}></span>
                     <span className="text-xs text-gray-500 font-medium">
-                      {isConnected ? "Đã kết nối" : "Mất kết nối chat"}
+                      {isConnected
+                        ? "Đã kết nối"
+                        : connectionError || "Đang kết nối máy chủ chat..."}
                     </span>
                     <span className="text-xs text-gray-300 mx-1">•</span>
                     <span className="text-xs text-gray-400">{activeUser.phoneNumber}</span>
