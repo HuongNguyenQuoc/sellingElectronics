@@ -13,8 +13,16 @@ export class ConversationRepository{
         }
 
     async getAllConversations(){
-        return await Conversation.find().populate('participantId');
+        const conversations = await Conversation.find()
+            .sort({ updatedAt: -1 })
+            .populate({
+                path: 'participantId',
+                match: { role: { $ne: 'admin' } }
+            });
+
+        // Old invalid records may point at an admin account. The populate
+        // filter turns those participants into null, so do not expose them.
+        return conversations.filter(conversation => conversation.participantId);
     }
 
 }
-

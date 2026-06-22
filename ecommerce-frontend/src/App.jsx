@@ -6,6 +6,7 @@ import MainLayout from "./layouts/MainLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminRoute from "./components/AdminRoute";
 import UserRoute from "./components/UserRoute";
+import DocumentTitle from "./components/DocumentTitle";
 
 // --- PAGES KHÁCH HÀNG ---
 import HomePage from "./pages/user/HomePage";
@@ -30,6 +31,7 @@ import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
 function App() {
   return (
     <BrowserRouter>
+      <DocumentTitle />
       <Routes>
         {/* ================================================== */}
         {/* LUỒNG 1: GIAO DIỆN KHÁCH HÀNG (Có Navbar & Footer) */}

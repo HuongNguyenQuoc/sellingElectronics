@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import OrderCard from "./OrderCard"; // Đảm bảo đường dẫn này đúng với nơi bạn lưu OrderCard
 import api from '../api/axiosConfig'
-import socket from "../api/socket";
+import socket, { connectSocket } from "../api/socket";
 
 const getStoredUser = () => {
   try {
@@ -67,9 +67,6 @@ const ChatWidget = () => {
       console.log("Socket connected:", socket.id);
       setIsConnected(true);
       setConnectionError("");
-      socket.emit("john_room", {
-        userId: currentUser._id
-      });
     });
 
     socket.on("disconnect", () => {
@@ -79,7 +76,11 @@ const ChatWidget = () => {
     socket.on("connect_error", (error) => {
       console.error("Socket connect error:", error.message);
       setIsConnected(false);
-      setConnectionError("Không thể kết nối tới máy chủ chat");
+      setConnectionError(
+        error.message === "Unauthorized"
+          ? "Phiên đăng nhập không hợp lệ"
+          : "Không thể kết nối tới máy chủ chat"
+      );
     });
 
     socket.on("receive_message", (message) => {
@@ -94,11 +95,7 @@ const ChatWidget = () => {
       console.error(error);
     });
 
-    if (!socket.connected) {
-      socket.connect();
-    } else {
-      socket.emit("john_room", { userId: currentUser._id });
-    }
+    connectSocket();
 
     return () => {
       socket.off("connect");
@@ -116,9 +113,6 @@ const ChatWidget = () => {
     if (!inputMessage.trim() || !currentUser || !isConnected) return;
 
     const messagePayload = {
-      conversationId: currentUser._id,
-      senderId: currentUser._id,
-      receiverId: "admin",
       content: inputMessage
     };
 

@@ -2,7 +2,7 @@
   import OrderCard from "../../components/OrderCard";
 
   import api from '../../api/axiosConfig'
-  import socket from "../../api/socket";
+  import socket, { connectSocket } from "../../api/socket";
 
   // HÀM TẠO MÀU NỀN AVATAR THEO TÊN KHÁCH HÀNG
   const getAvatarColor = (name) => {
@@ -41,8 +41,11 @@
 
         setConversations(res.data);
 
-        if (res.data.length > 0) {
-          setActiveUserId(res.data[0].participantId._id);
+        const firstConversation = res.data.find(
+          (conversation) => conversation.participantId?._id
+        );
+        if (firstConversation) {
+          setActiveUserId(firstConversation.participantId._id);
         }
       } catch (err) {
         console.error(err);
@@ -83,7 +86,6 @@
     socket.on("connect", () => {
       console.log("Admin socket connected:", socket.id);
       setIsConnected(true);
-      socket.emit("john_room", { userId: "admin" });
     });
 
     socket.on("disconnect", () => {
@@ -107,11 +109,7 @@
       console.error(error);
     });
 
-    if (!socket.connected) {
-      socket.connect();
-    } else {
-      socket.emit("john_room", { userId: "admin" });
-    }
+    connectSocket();
 
     return () => {
       socket.off("connect");
@@ -124,19 +122,27 @@
     };
   }, []);
 
-    useEffect(() => {
-      if (!activeUserId) return;
+  useEffect(() => {
+    if (!activeUserId) return;
 
-      const fetchMessages = async () => {
-        try {
-          const res = await api.get(`/messages/${activeUserId}`);
-          setMessages(res.data);
-        } catch (err) {
-          console.error(err);
-        }
-      };
+    let ignoreResponse = false;
 
-      fetchMessages();
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(`/messages/${activeUserId}`);
+        if (!ignoreResponse) setMessages(res.data);
+      } catch (err) {
+        if (!ignoreResponse) console.error(err);
+      }
+    };
+
+    fetchMessages();
+
+    // If the admin selects another buyer before this request finishes, ignore
+    // the old response instead of showing it under the new buyer's name.
+    return () => {
+      ignoreResponse = true;
+    };
     }, [activeUserId]);
 
     // Lọc danh sách tin nhắn hiển thị ở khung chat bên phải
@@ -158,8 +164,6 @@
       if (!inputText.trim() || !activeUserId || !isConnected) return;
       const messagePayload = {
         conversationId: activeUserId,
-        senderId: "admin",
-        receiverId: activeUserId,
         content: inputText,
       };
 
@@ -203,7 +207,10 @@
                 return (
                   <div
                     key={conversation._id}
-                    onClick={() => setActiveUserId(user._id)}
+                    onClick={() => {
+                      setMessages([]);
+                      setActiveUserId(user._id);
+                    }}
                     className={`flex items-center gap-3 p-4 cursor-pointer border-b border-gray-100 transition-colors ${
                       isActive ? "bg-yellow-50 border-l-4 border-l-yellow-400" : "hover:bg-gray-100 border-l-4 border-l-transparent"
                     }`}
