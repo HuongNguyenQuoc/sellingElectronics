@@ -160,15 +160,16 @@ const AdminDashboard = () => {
         const safePrice = Number(item.price) || 0;
         const itemRevenue = safeQty * safePrice;
         
-        const itemNameLower = (item.name || "").toLowerCase();
-        let category = "Khác";
-        
-        if (itemNameLower.includes("iphone") || itemNameLower.includes("điện thoại") || itemNameLower.includes("samsung")|| itemNameLower.includes("smartphone"))  {
+        // Phân loại theo tags của sản phẩm, đồng bộ với trang quản lý sản phẩm.
+        const productTags = Array.isArray(item.product?.tags)
+          ? item.product.tags.map(tag => String(tag).trim().toLowerCase())
+          : [];
+        let category = "Phụ kiện";
+
+        if (productTags.includes("smartphone")) {
           category = "Điện thoại";
-        } else if (itemNameLower.includes("macbook") || itemNameLower.includes("laptop") || itemNameLower.includes("asus") || itemNameLower.includes("hp")) {
+        } else if (productTags.includes("laptop")) {
           category = "Laptop";
-        } else if (itemNameLower.includes("tai nghe") || itemNameLower.includes("chuột") || itemNameLower.includes("cáp") || itemNameLower.includes("sạc")) {
-          category = "Phụ kiện";
         }
         
         if (catMap[category] === undefined) catMap[category] = 0;
