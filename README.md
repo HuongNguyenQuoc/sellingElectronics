@@ -1,5 +1,7 @@
 # SellingElectronics Backend
 
+For the detail: https://techvolt-kappa.vercel.app
+
 SellingElectronics is a backend RESTful API for an e-commerce system built with **Node.js**, **Express.js**, **TypeScript**, **MongoDB**, and **Mongoose**.
 
 The project includes core e-commerce features such as authentication, product management, shopping cart, order placement, and order status tracking.
