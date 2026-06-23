@@ -1,4 +1,4 @@
-import mongoose, { HydratedDocument, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export interface IProductVariant {
   color: string;

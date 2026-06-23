@@ -6,7 +6,7 @@ export const notFound: RequestHandler = (req, _res, next): void => {
   next(error);
 };
 
-export const errorHandler: ErrorRequestHandler = (err, _req, res, next): void => {
+export const errorHandler: ErrorRequestHandler = (err, _req, res, _next): void => {
   const statusCode = err.statusCode ?? (res.statusCode === 200 ? 500 : res.statusCode);
   /*
   ??

@@ -6,12 +6,17 @@ import { generateToken } from '../utils/generateToken';
 import { AppError } from '../common/exceptions/AppError';
 import { sendJson } from '../utils/apiResponse';
 
-interface RegisterBody {
+type RegisterBody = {
   userName: string;
   email?: string;
   password: string;
   phoneNumber?: string;
   address?: string;
+}
+
+type LoginBody = {
+  email: string;
+  password: string;
 }
 
 type UserDoc = HydratedDocument<IUser>;
@@ -25,7 +30,7 @@ const buildAuthResponse = (user: UserDoc) => ({
   token: generateToken(user._id),
 });
 
-export const registerUser: RequestHandler<{}, {}, RegisterBody> = asyncHandler(async (req, res) => {
+export const registerUser: RequestHandler<Record<string, never>, unknown, RegisterBody> = asyncHandler(async (req, res) => {
   const { userName, email, password, phoneNumber, address } = req.body;
 
   if (!email && !phoneNumber) {
@@ -49,7 +54,7 @@ export const registerUser: RequestHandler<{}, {}, RegisterBody> = asyncHandler(a
   return sendJson(res, buildAuthResponse(user), 201);
 });
 
-export const loginUser: RequestHandler = asyncHandler(async (req, res) => {
+export const loginUser: RequestHandler<Record<string, never>, unknown, LoginBody> = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email) {

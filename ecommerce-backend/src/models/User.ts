@@ -67,7 +67,7 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
 );
 
 // Hash the password before saving the user
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   // If the password is not modified, skip hashing
   if (!this.isModified('password')) return;
   /*

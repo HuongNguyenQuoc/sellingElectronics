@@ -1,11 +1,10 @@
-import HeroSection from "../../components/HeroSection";
-import FlashDeals from "../../components/FlashDeals";
-import FeaturedPhones from "../../components/FeaturedPhones";
-import FeaturedLaptops from "../../components/FeaturedLaptops";
 import Accessories from "../../components/Accessories";
-import Recommendations from "../../components/Recommendations";
-import Footer from "../../components/Footer";
 import ChatWidget from "../../components/ChatWidget";
+import FeaturedLaptops from "../../components/FeaturedLaptops";
+import FeaturedPhones from "../../components/FeaturedPhones";
+import FlashDeals from "../../components/FlashDeals";
+import HeroSection from "../../components/HeroSection";
+import Recommendations from "../../components/Recommendations";
 
 const HomePage = () => {
   return (

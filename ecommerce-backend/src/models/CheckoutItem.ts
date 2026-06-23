@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema } from 'mongoose';
 
 export interface ICheckoutItem {
     productId:string;
@@ -35,4 +35,3 @@ export const CheckoutItemSchema = new Schema<ICheckoutItem>({
         required: true
     }
 });
-

@@ -1,5 +1,4 @@
 import { model, Schema, Types } from 'mongoose';
-import { User } from './User';
 
 export interface IConversation {
     //_id tự sinh

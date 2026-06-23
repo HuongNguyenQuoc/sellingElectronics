@@ -1,4 +1,3 @@
-import { SendMessageDto } from '../dtos/message.dto';
 import { Message, IMessage } from '../models/Message';
 
 export class MessageRepository {

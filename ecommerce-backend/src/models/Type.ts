@@ -1,5 +1,3 @@
-import mongoose, { Model,Schema } from 'mongoose';
-
 export enum Type {
     COMPUTER = 'computer',
     PHONE = 'phone',

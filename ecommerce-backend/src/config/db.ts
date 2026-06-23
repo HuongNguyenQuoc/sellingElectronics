@@ -11,8 +11,6 @@ export const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGO_URI);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    // With strict mode, 'error' is of type 'unknown'. We need to check if it's an Error instance.
-    const message = error instanceof Error ? error.message : String(error);
     console.error('Database connection error:', error);
     // keep original behavior but print full stack/object for easier debugging
     process.exit(1);

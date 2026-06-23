@@ -34,7 +34,7 @@ const protect = async (req: AuthRequest, _res: Response, next: NextFunction) => 
       req.user = user;
       return next(); // This means the user is authenticated and we can proceed to the next middleware or route handler
       
-    } catch (error) {
+    } catch {
       return next(new AppError(401, 'Token is not valid'));
     }
   }

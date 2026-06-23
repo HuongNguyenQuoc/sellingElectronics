@@ -1,4 +1,4 @@
-import mongoose, { Schema,Model,Types } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { IOrderItem, OrderItemSchema } from './OrderItem';
 import { IShippingAddress, ShippingAddressSchema } from './ShippingAddress';
 import { OrderStatus } from './OrderStatus';
